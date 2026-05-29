@@ -3,13 +3,13 @@
  * Точка входа приложения Trace Viz.
  * Реализует полный пайплайн:
  *   1. FileReader → onDataLoaded(rawData)
- *   2. extractSources(rawData) → sources[]
- *   3. normalizeRecords(sources) → NormalizedRecord[]
- *   4. groupByTraceId(records) → { traces, uncategorized }
- *   5. Для каждого трейса: classifyTrace(traceId, records) → { traceId, mode, records }
- *   6. Для каждого трейса: buildSpanHierarchy(records) → hierarchy
- *   7. Для каждого трейса: calculateLayout(hierarchy, orphanRecords) → layoutItems
- *   8. Для каждого трейса: calculateTimeline(layoutItems) → timelineScale
+ *   2. OpenSourceExtractor.extract(rawData) → sources[]
+ *   3. new DataNormalizer(fieldMapping).normalize(sources) → NormalizedRecord[]
+ *   4. TraceGrouper.group(records) → { traces, uncategorized }
+ *   5. Для каждого трейса: TraceClassifier.classify(traceId, records) → { traceId, mode, records }
+ *   6. Для каждого трейса: new SpanHierarchyBuilder().build(records) → hierarchy
+ *   7. Для каждого трейса: new HybridLayoutEngine(config).calculate(hierarchy, orphanRecords) → layoutItems
+ *   8. Для каждого трейса: TimelineCalculator.calculate(layoutItems) → timelineScale
  *   9. RenderEngine.init() + TimelineAxis.render() + SpanBarsRenderer.render()
  *   10. TraceListView.render() + RawLogViewer.render()
  *
@@ -24,13 +24,13 @@
 
 import { Logger } from './utils/Logger.js';
 import { FileReader } from './io/FileReader.js';
-import { extractSources } from './parser/OpenSourceExtractor.js';
-import { normalizeRecords } from './parser/DataNormalizer.js';
-import { groupByTraceId } from './processor/TraceGrouper.js';
-import { classifyTrace } from './processor/TraceClassifier.js';
-import { buildSpanHierarchy } from './processor/SpanHierarchyBuilder.js';
-import { calculateLayout } from './processor/HybridLayoutEngine.js';
-import { calculateTimeline } from './processor/TimelineCalculator.js';
+import { OpenSourceExtractor } from './parser/OpenSourceExtractor.js';
+import { DataNormalizer } from './parser/DataNormalizer.js';
+import { TraceGrouper } from './processor/TraceGrouper.js';
+import { TraceClassifier } from './processor/TraceClassifier.js';
+import { SpanHierarchyBuilder } from './processor/SpanHierarchyBuilder.js';
+import { HybridLayoutEngine } from './processor/HybridLayoutEngine.js';
+import { TimelineCalculator } from './processor/TimelineCalculator.js';
 import { RenderEngine } from './renderer/Engine.js';
 import { TimelineAxis } from './renderer/Axis.js';
 import { SpanBarsRenderer } from './renderer/SpanBars.js';
@@ -38,13 +38,15 @@ import { RawLogViewer } from './ui/RawLogViewer.js';
 import { TraceListView } from './ui/TraceList.js';
 import { DetailPanel } from './ui/DetailPanel.js';
 import { StatusBanner } from './ui/StatusBanner.js';
+import { FIELD_MAPPING } from './config/field-mapping.js';
+import { LAYOUT_CONFIG } from './config/app.js';
 
 /**
  * Глобальное состояние приложения.
  * @type {Object}
  * @private
  */
-var APP_STATE = {
+const APP_STATE = {
 	/** @type {import('./processor/TraceClassifier.js').ClassifiedTrace[]} */
 	classifiedTraces: [],
 	/** @type {Object<string, Object>} */
@@ -76,13 +78,14 @@ var APP_STATE = {
 function parseData(data) {
 	Logger.info('Main', 'parseData: запуск пайплайна парсинга');
 
-	var sources = extractSources(data);
+	const sources = OpenSourceExtractor.extract(data);
 	Logger.info(
 		'Main',
 		'parseData: извлечено ' + sources.length + ' источников',
 	);
 
-	var normalized = normalizeRecords(sources);
+	const normalizer = new DataNormalizer(FIELD_MAPPING);
+	const normalized = normalizer.normalize(sources);
 	Logger.info(
 		'Main',
 		'parseData: нормализовано ' + normalized.length + ' записей',
@@ -98,8 +101,8 @@ function parseData(data) {
 	}
 
 	// Логируем ошибки парсинга
-	var errorCount = 0;
-	for (var i = 0; i < normalized.length; i++) {
+	let errorCount = 0;
+	for (let i = 0; i < normalized.length; i++) {
 		if (normalized[i].isError) {
 			errorCount++;
 		}
@@ -131,7 +134,7 @@ function parseData(data) {
 function processData(parsedData) {
 	Logger.info('Main', 'processData: запуск группировки и классификации');
 
-	var normalized = parsedData.normalized;
+	const normalized = parsedData.normalized;
 
 	if (!Array.isArray(normalized) || normalized.length === 0) {
 		Logger.warn('Main', 'processData: нет записей для обработки');
@@ -143,9 +146,9 @@ function processData(parsedData) {
 	}
 
 	// 1. Группировка по TraceId
-	var grouped = groupByTraceId(normalized);
-	var traces = grouped.traces;
-	var uncategorized = grouped.uncategorized;
+	const grouped = TraceGrouper.group(normalized);
+	const traces = grouped.traces;
+	const uncategorized = grouped.uncategorized;
 	Logger.info(
 		'Main',
 		'processData: сгруппировано ' +
@@ -157,10 +160,10 @@ function processData(parsedData) {
 
 	// 2. Классификация каждого трейса
 	/** @type {import('./processor/TraceClassifier.js').ClassifiedTrace[]} */
-	var classifiedTraces = [];
+	const classifiedTraces = [];
 
 	traces.forEach(function (records, traceId) {
-		var classified = classifyTrace(traceId, records);
+		const classified = TraceClassifier.classify(traceId, records);
 		classifiedTraces.push(classified);
 		Logger.debug(
 			'Main',
@@ -208,17 +211,12 @@ function precomputeLayouts(classifiedTraces, uncategorized) {
 		'precomputeLayouts: предрасчёт layout для всех трейсов',
 	);
 
-	var config = {
-		timelineWidth: 1200,
-		rowHeight: 32,
-		indentWidth: 20,
-		minBarWidth: 4,
-	};
+	const config = LAYOUT_CONFIG;
 
-	for (var i = 0; i < classifiedTraces.length; i++) {
-		var trace = classifiedTraces[i];
-		var traceId = trace.traceId;
-		var records = trace.records || [];
+	for (let i = 0; i < classifiedTraces.length; i++) {
+		const trace = classifiedTraces[i];
+		const traceId = trace.traceId;
+		const records = trace.records || [];
 
 		Logger.debug(
 			'Main',
@@ -230,21 +228,23 @@ function precomputeLayouts(classifiedTraces, uncategorized) {
 		);
 
 		// Строим иерархию спанов
-		var hierarchy = buildSpanHierarchy(records);
+		const hierarchyBuilder = new SpanHierarchyBuilder();
+		const hierarchy = hierarchyBuilder.build(records);
 
 		// Orphan-записи — это записи без spanId внутри трейса
-		var orphanRecords = [];
-		for (var j = 0; j < records.length; j++) {
+		const orphanRecords = [];
+		for (let j = 0; j < records.length; j++) {
 			if (!records[j].spanId) {
 				orphanRecords.push(records[j]);
 			}
 		}
 
 		// Рассчитываем layout
-		var layoutItems = calculateLayout(hierarchy, orphanRecords, config);
+		const layoutEngine = new HybridLayoutEngine(config);
+		const layoutItems = layoutEngine.calculate(hierarchy, orphanRecords);
 
 		// Рассчитываем временную шкалу
-		var scale = calculateTimeline(layoutItems, config);
+		const scale = TimelineCalculator.calculate(layoutItems, config);
 
 		// Сохраняем
 		APP_STATE.traceLayouts[traceId] = layoutItems;
@@ -274,9 +274,9 @@ function precomputeLayouts(classifiedTraces, uncategorized) {
  * @param {string} traceId - Идентификатор трейса
  */
 function renderTrace(traceId) {
-	var engine = APP_STATE.engine;
-	var axis = APP_STATE.axis;
-	var spanBars = APP_STATE.spanBars;
+	const engine = APP_STATE.engine;
+	const axis = APP_STATE.axis;
+	const spanBars = APP_STATE.spanBars;
 
 	if (!engine || !axis || !spanBars) {
 		Logger.warn(
@@ -286,8 +286,8 @@ function renderTrace(traceId) {
 		return;
 	}
 
-	var layoutItems = APP_STATE.traceLayouts[traceId];
-	var scale = APP_STATE.traceScales[traceId];
+	const layoutItems = APP_STATE.traceLayouts[traceId];
+	const scale = APP_STATE.traceScales[traceId];
 
 	if (!layoutItems || !scale) {
 		Logger.warn(
@@ -306,8 +306,8 @@ function renderTrace(traceId) {
 
 	// Отрисовываем бары
 	spanBars.render(layoutItems, {
-		rowHeight: 32,
-		minBarWidth: 4,
+		rowHeight: LAYOUT_CONFIG.rowHeight,
+		minBarWidth: LAYOUT_CONFIG.minBarWidth,
 		onSpanClick: function (spanId) {
 			onSpanClick(spanId, traceId);
 		},
@@ -334,19 +334,19 @@ function onSpanClick(spanId, traceId) {
 	Logger.debug('Main', 'onSpanClick: клик по спану ' + spanId);
 
 	// Подсвечиваем спан
-	var spanBars = APP_STATE.spanBars;
+	const spanBars = APP_STATE.spanBars;
 	if (spanBars) {
 		spanBars.highlight(spanId);
 	}
 
 	// Ищем запись в layoutItems
-	var layoutItems = APP_STATE.traceLayouts[traceId];
+	const layoutItems = APP_STATE.traceLayouts[traceId];
 	if (!layoutItems) {
 		return;
 	}
 
-	var record = null;
-	for (var i = 0; i < layoutItems.length; i++) {
+	let record = null;
+	for (let i = 0; i < layoutItems.length; i++) {
 		if (layoutItems[i].id === spanId) {
 			record = layoutItems[i].record;
 			break;
@@ -362,7 +362,7 @@ function onSpanClick(spanId, traceId) {
 	}
 
 	// Показываем детали
-	var detailPanel = APP_STATE.detailPanel;
+	const detailPanel = APP_STATE.detailPanel;
 	if (detailPanel) {
 		detailPanel.show(record);
 	}
@@ -377,13 +377,13 @@ function onTraceSelect(traceId) {
 	Logger.info('Main', 'onTraceSelect: выбран трейс ' + traceId);
 
 	// Снимаем подсветку со спанов
-	var spanBars = APP_STATE.spanBars;
+	const spanBars = APP_STATE.spanBars;
 	if (spanBars) {
 		spanBars.unhighlightAll();
 	}
 
 	// Скрываем панель деталей
-	var detailPanel = APP_STATE.detailPanel;
+	const detailPanel = APP_STATE.detailPanel;
 	if (detailPanel) {
 		detailPanel.hide();
 	}
@@ -402,8 +402,8 @@ function onTraceSelect(traceId) {
 function renderData(processedData) {
 	Logger.info('Main', 'renderData: запуск рендеринга');
 
-	var classifiedTraces = processedData.classifiedTraces;
-	var uncategorized = processedData.uncategorized;
+	const classifiedTraces = processedData.classifiedTraces;
+	const uncategorized = processedData.uncategorized;
 
 	// Обновляем статус
 	if (APP_STATE.statusBanner) {
@@ -417,9 +417,9 @@ function renderData(processedData) {
 	precomputeLayouts(classifiedTraces, uncategorized);
 
 	// Инициализация RenderEngine
-	var engine = new RenderEngine({
+	const engine = new RenderEngine({
 		containerId: 'svg-container',
-		width: 1200,
+		width: LAYOUT_CONFIG.timelineWidth,
 		height: 600,
 		axisHeight: 30,
 	});
@@ -427,19 +427,19 @@ function renderData(processedData) {
 	APP_STATE.engine = engine;
 
 	// Инициализация TimelineAxis
-	var axis = new TimelineAxis(engine, null);
+	const axis = new TimelineAxis(engine, null);
 	APP_STATE.axis = axis;
 
 	// Инициализация SpanBarsRenderer
-	var spanBars = new SpanBarsRenderer(engine);
+	const spanBars = new SpanBarsRenderer(engine);
 	APP_STATE.spanBars = spanBars;
 
 	// Отображаем список трейсов
-	var traceList = APP_STATE.traceList;
+	const traceList = APP_STATE.traceList;
 	if (traceList) {
-		var traceSummaries = [];
-		for (var i = 0; i < classifiedTraces.length; i++) {
-			var t = classifiedTraces[i];
+		const traceSummaries = [];
+		for (let i = 0; i < classifiedTraces.length; i++) {
+			const t = classifiedTraces[i];
 			traceSummaries.push({
 				traceId: t.traceId,
 				mode: t.mode,
@@ -450,9 +450,9 @@ function renderData(processedData) {
 	}
 
 	// Отображаем некатегоризированные записи
-	var rawLogContainer = document.getElementById('raw-log-container');
+	const rawLogContainer = document.getElementById('raw-log-container');
 	if (rawLogContainer) {
-		RawLogViewer(uncategorized, rawLogContainer);
+		new RawLogViewer(uncategorized, rawLogContainer);
 		Logger.info(
 			'Main',
 			'renderData: RawLogViewer отображает ' +
@@ -468,13 +468,13 @@ function renderData(processedData) {
 
 	// Если есть трейсы — отображаем первый
 	if (classifiedTraces.length > 0) {
-		var firstTraceId = classifiedTraces[0].traceId;
+		const firstTraceId = classifiedTraces[0].traceId;
 		renderTrace(firstTraceId);
 	}
 
 	// Обновляем статус
 	if (APP_STATE.statusBanner) {
-		var statusMsg =
+		const statusMsg =
 			'\u0413\u043E\u0442\u043E\u0432\u043E: ' +
 			String(classifiedTraces.length) +
 			' \u0442\u0440\u0435\u0439\u0441\u043E\u0432';
@@ -502,7 +502,7 @@ function onDataLoaded(data) {
 	}
 
 	try {
-		var parsed = parseData(data);
+		const parsed = parseData(data);
 
 		if (APP_STATE.statusBanner) {
 			APP_STATE.statusBanner.setStatus(
@@ -511,11 +511,17 @@ function onDataLoaded(data) {
 			);
 		}
 
-		var processed = processData(parsed);
+		const processed = processData(parsed);
 		renderData(processed);
+
+		// НФТ 4.1: Очистка raw после завершения пайплайна
+		if (typeof window !== 'undefined' && window.__APP_DATA__) {
+			window.__APP_DATA__.raw = null;
+		}
+
 		Logger.info('Main', 'Пайплайн обработки завершён');
 	} catch (err) {
-		var msg = err instanceof Error ? err.message : String(err);
+		const msg = err instanceof Error ? err.message : String(err);
 		Logger.error('Main', 'Ошибка в пайплайне обработки: ' + msg);
 
 		if (APP_STATE.statusBanner) {
@@ -551,11 +557,11 @@ function onError(message) {
 function initApp() {
 	Logger.info('Main', 'Trace Viz инициализация...');
 
-	var dropZone = document.getElementById('upload-zone');
-	var fileInput = document.getElementById('file-input');
-	var statusEl = document.getElementById('upload-status');
-	var clearLogsBtn = document.getElementById('clear-logs');
-	var logContainer = document.getElementById('log-container');
+	const dropZone = document.getElementById('upload-zone');
+	const fileInput = document.getElementById('file-input');
+	const statusEl = document.getElementById('upload-status');
+	const clearLogsBtn = document.getElementById('clear-logs');
+	const logContainer = document.getElementById('log-container');
 
 	if (!dropZone || !fileInput || !statusEl) {
 		Logger.error(
@@ -569,7 +575,7 @@ function initApp() {
 	Logger.initGlobalHandlers();
 
 	// Инициализация StatusBanner
-	var statusBanner = new StatusBanner('status-banner-container');
+	const statusBanner = new StatusBanner('status-banner-container');
 	APP_STATE.statusBanner = statusBanner;
 	statusBanner.setStatus(
 		'\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u0435 \u0444\u0430\u0439\u043B',
@@ -577,7 +583,7 @@ function initApp() {
 	);
 
 	// Инициализация TraceListView
-	var traceList = new TraceListView('trace-list-container', function (
+	const traceList = new TraceListView('trace-list-container', function (
 		traceId,
 	) {
 		onTraceSelect(traceId);
@@ -585,11 +591,11 @@ function initApp() {
 	APP_STATE.traceList = traceList;
 
 	// Инициализация DetailPanel
-	var detailPanel = new DetailPanel('detail-panel-container');
+	const detailPanel = new DetailPanel('detail-panel-container');
 	APP_STATE.detailPanel = detailPanel;
 
 	// Инициализация FileReader
-	var fileReader = new FileReader(dropZone, fileInput, statusEl, {
+	const fileReader = new FileReader(dropZone, fileInput, statusEl, {
 		onDataLoaded: onDataLoaded,
 		onError: onError,
 	});
@@ -600,7 +606,7 @@ function initApp() {
 			while (logContainer.firstChild) {
 				logContainer.removeChild(logContainer.firstChild);
 			}
-			var placeholder = document.createElement('p');
+			const placeholder = document.createElement('p');
 			placeholder.className = 'log-table__placeholder';
 			placeholder.textContent = 'Логи будут отображаться здесь';
 			logContainer.appendChild(placeholder);

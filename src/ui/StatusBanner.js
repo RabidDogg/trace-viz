@@ -19,7 +19,7 @@
  * @enum {string}
  * @private
  */
-var CSS = {
+const CSS = {
 	BANNER: 'status-banner',
 	BANNER_INFO: 'status-banner--info',
 	BANNER_SUCCESS: 'status-banner--success',
@@ -35,7 +35,7 @@ var CSS = {
  * @enum {string}
  * @private
  */
-var ICONS = {
+const ICONS = {
 	info: '\u2139\uFE0F',
 	success: '\u2705',
 	warning: '\u26A0\uFE0F',
@@ -47,7 +47,7 @@ var ICONS = {
  * @type {Object<string, string>}
  * @private
  */
-var TYPE_CLASS_MAP = {
+const TYPE_CLASS_MAP = {
 	info: CSS.BANNER_INFO,
 	success: CSS.BANNER_SUCCESS,
 	warning: CSS.BANNER_WARNING,
@@ -67,131 +67,138 @@ var TYPE_CLASS_MAP = {
  * banner.setStatus('Ошибка загрузки', 'error');
  * banner.clear();
  */
-export function StatusBanner(containerId) {
+class StatusBanner {
 	/**
-	 * ID контейнера.
-	 * @type {string}
-	 * @private
+	 * @param {string} containerId - ID DOM-элемента, в который будет вставлен баннер
 	 */
-	this._containerId = containerId;
+	constructor(containerId) {
+		/**
+		 * ID контейнера.
+		 * @type {string}
+		 * @private
+		 */
+		this._containerId = containerId;
+
+		/**
+		 * Ссылка на корневой элемент баннера.
+		 * @type {HTMLElement|null}
+		 * @private
+		 */
+		this._element = null;
+
+		/**
+		 * Ссылка на элемент с текстом статуса.
+		 * @type {HTMLElement|null}
+		 * @private
+		 */
+		this._textEl = null;
+
+		/**
+		 * Ссылка на элемент с иконкой.
+		 * @type {HTMLElement|null}
+		 * @private
+		 */
+		this._iconEl = null;
+
+		/**
+		 * Текущий тип статуса.
+		 * @type {string}
+		 * @private
+		 */
+		this._currentType = 'info';
+
+		// Инициализация DOM-структуры
+		this._init();
+	}
 
 	/**
-	 * Ссылка на корневой элемент баннера.
-	 * @type {HTMLElement|null}
+	 * Создаёт DOM-структуру баннера.
+	 *
 	 * @private
 	 */
-	this._element = null;
+	_init() {
+		const container = document.getElementById(this._containerId);
+		if (!container) {
+			return;
+		}
+
+		// Корневой элемент баннера
+		const banner = document.createElement('div');
+		banner.className =
+			CSS.BANNER + ' ' + CSS.BANNER_HIDDEN + ' ' + CSS.BANNER_INFO;
+
+		// Иконка
+		const icon = document.createElement('span');
+		icon.className = CSS.BANNER_ICON;
+		icon.textContent = ICONS.info;
+		banner.appendChild(icon);
+
+		// Текст статуса
+		const text = document.createElement('span');
+		text.className = CSS.BANNER_TEXT;
+		text.textContent = '';
+		banner.appendChild(text);
+
+		container.appendChild(banner);
+
+		this._element = banner;
+		this._iconEl = icon;
+		this._textEl = text;
+	}
 
 	/**
-	 * Ссылка на элемент с текстом статуса.
-	 * @type {HTMLElement|null}
-	 * @private
+	 * Устанавливает статус баннера.
+	 *
+	 * @param {string} message - Текст статуса
+	 * @param {string} [type='info'] - Тип статуса: 'info' | 'success' | 'warning' | 'error'
 	 */
-	this._textEl = null;
+	setStatus(message, type) {
+		if (!this._element || !this._textEl || !this._iconEl) {
+			return;
+		}
+
+		// Определяем тип
+		const statusType = type || 'info';
+		const isValidType = TYPE_CLASS_MAP.hasOwnProperty(statusType);
+		if (!isValidType) {
+			statusType = 'info';
+		}
+
+		this._currentType = statusType;
+
+		// Обновляем текст
+		this._textEl.textContent = message;
+
+		// Обновляем иконку
+		this._iconEl.textContent = ICONS[statusType] || ICONS.info;
+
+		// Обновляем CSS-классы
+		const classList = this._element.classList;
+
+		// Удаляем все классы типа
+		classList.remove(
+			CSS.BANNER_INFO,
+			CSS.BANNER_SUCCESS,
+			CSS.BANNER_WARNING,
+			CSS.BANNER_ERROR,
+			CSS.BANNER_HIDDEN,
+		);
+
+		// Добавляем класс текущего типа
+		classList.add(TYPE_CLASS_MAP[statusType] || CSS.BANNER_INFO);
+	}
 
 	/**
-	 * Ссылка на элемент с иконкой.
-	 * @type {HTMLElement|null}
-	 * @private
+	 * Очищает статус и скрывает баннер.
 	 */
-	this._iconEl = null;
+	clear() {
+		if (!this._element || !this._textEl) {
+			return;
+		}
 
-	/**
-	 * Текущий тип статуса.
-	 * @type {string}
-	 * @private
-	 */
-	this._currentType = 'info';
-
-	// Инициализация DOM-структуры
-	this._init();
+		this._textEl.textContent = '';
+		this._element.classList.add(CSS.BANNER_HIDDEN);
+	}
 }
 
-/**
- * Создаёт DOM-структуру баннера.
- *
- * @private
- */
-StatusBanner.prototype._init = function () {
-	var container = document.getElementById(this._containerId);
-	if (!container) {
-		return;
-	}
-
-	// Корневой элемент баннера
-	var banner = document.createElement('div');
-	banner.className =
-		CSS.BANNER + ' ' + CSS.BANNER_HIDDEN + ' ' + CSS.BANNER_INFO;
-
-	// Иконка
-	var icon = document.createElement('span');
-	icon.className = CSS.BANNER_ICON;
-	icon.textContent = ICONS.info;
-	banner.appendChild(icon);
-
-	// Текст статуса
-	var text = document.createElement('span');
-	text.className = CSS.BANNER_TEXT;
-	text.textContent = '';
-	banner.appendChild(text);
-
-	container.appendChild(banner);
-
-	this._element = banner;
-	this._iconEl = icon;
-	this._textEl = text;
-};
-
-/**
- * Устанавливает статус баннера.
- *
- * @param {string} message - Текст статуса
- * @param {string} [type='info'] - Тип статуса: 'info' | 'success' | 'warning' | 'error'
- */
-StatusBanner.prototype.setStatus = function (message, type) {
-	if (!this._element || !this._textEl || !this._iconEl) {
-		return;
-	}
-
-	// Определяем тип
-	var statusType = type || 'info';
-	var isValidType = TYPE_CLASS_MAP.hasOwnProperty(statusType);
-	if (!isValidType) {
-		statusType = 'info';
-	}
-
-	this._currentType = statusType;
-
-	// Обновляем текст
-	this._textEl.textContent = message;
-
-	// Обновляем иконку
-	this._iconEl.textContent = ICONS[statusType] || ICONS.info;
-
-	// Обновляем CSS-классы
-	var classList = this._element.classList;
-
-	// Удаляем все классы типа
-	classList.remove(
-		CSS.BANNER_INFO,
-		CSS.BANNER_SUCCESS,
-		CSS.BANNER_WARNING,
-		CSS.BANNER_ERROR,
-		CSS.BANNER_HIDDEN,
-	);
-
-	// Добавляем класс текущего типа
-	classList.add(TYPE_CLASS_MAP[statusType] || CSS.BANNER_INFO);
-};
-
-/**
- * Очищает статус и скрывает баннер.
- */
-StatusBanner.prototype.clear = function () {
-	if (!this._element || !this._textEl) {
-		return;
-	}
-
-	this._textEl.textContent = '';
-	this._element.classList.add(CSS.BANNER_HIDDEN);
-};
+export { StatusBanner };

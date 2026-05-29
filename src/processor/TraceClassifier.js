@@ -26,63 +26,71 @@
  */
 
 /**
- * Классифицирует массив записей одного трейса по режиму отображения.
- *
- * Чистая функция: не мутирует входной массив, не имеет побочных эффектов.
- *
- * @param {string} traceId - Идентификатор трейса
- * @param {NormalizedRecord[]} records - Массив записей одного трейса
- * @returns {ClassifiedTrace} Объект с полями traceId, mode, records
- *
- * @example
- * const result = classifyTrace('abc-123', records);
- * // { traceId: 'abc-123', mode: 'full', records: [...] }
- *
- * @example
- * const result = classifyTrace('flat-1', records);
- * // { traceId: 'flat-1', mode: 'flat', records: [...] }
+ * @class TraceClassifier
+ * Статический класс для классификации трейсов по режиму отображения.
  */
-export function classifyTrace(traceId, records) {
-	if (!Array.isArray(records) || records.length === 0) {
+class TraceClassifier {
+	/**
+	 * Классифицирует массив записей одного трейса по режиму отображения.
+	 *
+	 * Чистая функция: не мутирует входной массив, не имеет побочных эффектов.
+	 *
+	 * @param {string} traceId - Идентификатор трейса
+	 * @param {NormalizedRecord[]} records - Массив записей одного трейса
+	 * @returns {ClassifiedTrace} Объект с полями traceId, mode, records
+	 *
+	 * @example
+	 * const result = TraceClassifier.classify('abc-123', records);
+	 * // { traceId: 'abc-123', mode: 'full', records: [...] }
+	 *
+	 * @example
+	 * const result = TraceClassifier.classify('flat-1', records);
+	 * // { traceId: 'flat-1', mode: 'flat', records: [...] }
+	 */
+	static classify(traceId, records) {
+		if (!Array.isArray(records) || records.length === 0) {
+			return {
+				traceId: String(traceId),
+				mode: 'flat',
+				records: [],
+			};
+		}
+
+		let hasSpanId = false;
+		let hasNoSpanId = false;
+
+		for (let i = 0; i < records.length; i++) {
+			const record = records[i];
+			const spanId = record.spanId;
+
+			if (spanId !== null && spanId !== undefined) {
+				hasSpanId = true;
+			} else {
+				hasNoSpanId = true;
+			}
+
+			// Если нашли оба варианта — можно досрочно выйти
+			if (hasSpanId && hasNoSpanId) {
+				break;
+			}
+		}
+
+		/** @type {'full' | 'flat' | 'shifted'} */
+		let mode;
+		if (hasSpanId && hasNoSpanId) {
+			mode = 'shifted';
+		} else if (hasSpanId) {
+			mode = 'full';
+		} else {
+			mode = 'flat';
+		}
+
 		return {
 			traceId: String(traceId),
-			mode: 'flat',
-			records: [],
+			mode: mode,
+			records: records,
 		};
 	}
-
-	let hasSpanId = false;
-	let hasNoSpanId = false;
-
-	for (let i = 0; i < records.length; i++) {
-		const record = records[i];
-		const spanId = record.spanId;
-
-		if (spanId !== null && spanId !== undefined) {
-			hasSpanId = true;
-		} else {
-			hasNoSpanId = true;
-		}
-
-		// Если нашли оба варианта — можно досрочно выйти
-		if (hasSpanId && hasNoSpanId) {
-			break;
-		}
-	}
-
-	/** @type {'full' | 'flat' | 'shifted'} */
-	let mode;
-	if (hasSpanId && hasNoSpanId) {
-		mode = 'shifted';
-	} else if (hasSpanId) {
-		mode = 'full';
-	} else {
-		mode = 'flat';
-	}
-
-	return {
-		traceId: String(traceId),
-		mode: mode,
-		records: records,
-	};
 }
+
+export { TraceClassifier };
