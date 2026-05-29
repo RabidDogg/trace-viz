@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trace Viz — Визуализация трейсов</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Зона загрузки (верхняя часть) -->
+    <header id="upload-zone" class="upload-zone">
+      <div class="upload-zone__content">
+        <p class="upload-zone__icon">📂</p>
+        <p class="upload-zone__text">Перетащите JSON-файл с трейсами сюда</p>
+        <p class="upload-zone__hint">или</p>
+        <label class="upload-zone__label">
+          <input
+            type="file"
+            accept=".json"
+            id="file-input"
+            class="upload-zone__input"
+          >
+          <span class="upload-zone__button">Выберите файл</span>
+        </label>
+        <p class="upload-zone__status" id="upload-status"></p>
+      </div>
+    </header>
+
+    <!-- Статус-баннер -->
+    <div id="status-banner-container"></div>
+
+    <!-- Основной контент: список трейсов + визуализация + детали -->
+    <div class="main-layout">
+      <!-- Список трейсов (левая панель) -->
+      <aside class="trace-list-panel">
+        <div class="trace-list-panel__header">
+          <h2 class="trace-list-panel__title">Трейсы</h2>
+        </div>
+        <div id="trace-list-container"></div>
+      </aside>
+
+      <!-- Область визуализации (центральная) -->
+      <main class="visualization-area" id="visualization-area">
+        <svg
+          id="svg-container"
+          class="visualization-area__svg"
+          width="100%"
+          height="100%"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <text
+            x="50%"
+            y="50%"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="visualization-area__placeholder"
+          >
+            Загрузите файл с трейсами для начала работы
+          </text>
+        </svg>
+      </main>
+
+      <!-- Панель деталей спана (правая панель) -->
+      <aside class="detail-panel-wrapper">
+        <div id="detail-panel-container"></div>
+      </aside>
+    </div>
+
+    <!-- Таблица логов (нижняя часть) -->
+    <footer id="log-table" class="log-table">
+      <div class="log-table__header">
+        <h2 class="log-table__title">Журнал событий</h2>
+        <button
+          type="button"
+          id="clear-logs"
+          class="log-table__clear-btn"
+        >
+          Очистить
+        </button>
+      </div>
+      <div class="log-table__container" id="log-container">
+        <p class="log-table__placeholder">Логи будут отображаться здесь</p>
+      </div>
+    </footer>
+
+    <!-- Raw Log Viewer (некатегоризированные записи) -->
+    <div id="raw-log-container"></div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
