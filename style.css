@@ -300,3 +300,37 @@ body {
 .modal__button:hover {
   background-color: #2563eb;
 }
+
+/* ==========================================================================
+   Ось времени (SVG)
+   ========================================================================== */
+
+.axis__line {
+  stroke: #888888;
+  stroke-width: 1;
+}
+
+.axis__tick {
+  stroke: #aaaaaa;
+  stroke-width: 1;
+}
+
+.axis__tick--major {
+  stroke: #aaaaaa;
+  stroke-width: 1.5;
+}
+
+.axis__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: #cccccc;
+  user-select: none;
+}
+
+.axis__label--major {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  fill: #cccccc;
+  user-select: none;
+}
