@@ -114,7 +114,7 @@ class Logger {
 	 * @private
 	 */
 	static #write(level, moduleName, message, ...args) {
-		const timestamp = APP_DEBUG ? ` [${formatTimestamp()}]` : '';
+		const timestamp = ` [${formatTimestamp()}]`;
 		const prefix = `[${level}] [${moduleName}]${timestamp}`;
 
 		switch (level) {
@@ -150,7 +150,16 @@ class Logger {
 
 		const entry = document.createElement('div');
 		entry.className = `log-entry log-entry--${level.toLowerCase()}`;
-		entry.textContent = `[${level}] [${moduleName}] ${message}`;
+
+		const timestampSpan = document.createElement('span');
+		timestampSpan.className = 'log-entry__timestamp';
+		timestampSpan.textContent = formatTimestamp();
+
+		const textSpan = document.createElement('span');
+		textSpan.textContent = `[${level}] [${moduleName}] ${message}`;
+
+		entry.appendChild(timestampSpan);
+		entry.appendChild(textSpan);
 		container.appendChild(entry);
 		container.scrollTop = container.scrollHeight;
 	}

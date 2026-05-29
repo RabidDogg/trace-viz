@@ -23,7 +23,7 @@
 'use strict';
 
 import { Logger } from './utils/Logger.js';
-import { FileReader } from './io/FileReader.js';
+import { FileLoader } from './io/FileReader.js';
 import { OpenSourceExtractor } from './parser/OpenSourceExtractor.js';
 import { DataNormalizer } from './parser/DataNormalizer.js';
 import { TraceGrouper } from './processor/TraceGrouper.js';
@@ -39,7 +39,7 @@ import { TraceListView } from './ui/TraceList.js';
 import { DetailPanel } from './ui/DetailPanel.js';
 import { StatusBanner } from './ui/StatusBanner.js';
 import { FIELD_MAPPING } from './config/field-mapping.js';
-import { LAYOUT_CONFIG } from './config/app.js';
+import { APP_DEBUG, LAYOUT_CONFIG } from './config/app.js';
 
 /**
  * Глобальное состояние приложения.
@@ -594,8 +594,8 @@ function initApp() {
 	const detailPanel = new DetailPanel('detail-panel-container');
 	APP_STATE.detailPanel = detailPanel;
 
-	// Инициализация FileReader
-	const fileReader = new FileReader(dropZone, fileInput, statusEl, {
+	// Инициализация FileLoader
+	const fileLoader = new FileLoader(dropZone, fileInput, statusEl, {
 		onDataLoaded: onDataLoaded,
 		onError: onError,
 	});
@@ -616,6 +616,9 @@ function initApp() {
 
 	Logger.info('Main', 'Trace Viz инициализирован успешно');
 	Logger.info('Main', 'Ожидание загрузки файла...');
+	APP_DEBUG
+		? Logger.info('Main', 'Режим отладки включен')
+		: Logger.info('Main', 'Режим отладки отключен');
 }
 
 // Запуск приложения после полной загрузки DOM

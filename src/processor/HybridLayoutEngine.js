@@ -327,7 +327,7 @@ class HybridLayoutEngine {
 
 		// Собираем времена из дерева спанов
 		for (let i = 0; i < roots.length; i++) {
-			this.#collectSpanTimes(roots[i]);
+			collectSpanTimes(roots[i]);
 		}
 
 		// Собираем времена из orphan-записей

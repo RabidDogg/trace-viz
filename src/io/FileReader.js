@@ -3,6 +3,9 @@
  * Загрузчик файлов для Trace Viz.
  * Поддерживает Drag & Drop и выбор файла через <input type="file">.
  * Валидирует JSON и приводит плоский массив к структуре Elasticsearch-хита.
+ *
+ * ВНИМАНИЕ: класс назван FileLoader, а не FileReader, чтобы избежать
+ * конфликта с глобальным браузерным API FileReader.
  */
 
 'use strict';
@@ -10,16 +13,16 @@
 import { Logger } from '../utils/Logger.js';
 
 /**
- * @typedef {Object} FileReaderCallbacks
+ * @typedef {Object} FileLoaderCallbacks
  * @property {function(Object): void} onDataLoaded - Вызывается при успешной загрузке и валидации
  * @property {function(string): void} onError - Вызывается при ошибке загрузки или валидации
  */
 
 /**
- * @class FileReader
+ * @class FileLoader
  * Управляет загрузкой JSON-файлов через Drag & Drop и file input.
  */
-class FileReader {
+class FileLoader {
 	/** @type {HTMLElement} */
 	#dropZone;
 
@@ -29,17 +32,20 @@ class FileReader {
 	/** @type {HTMLElement} */
 	#statusEl;
 
-	/** @type {FileReaderCallbacks} */
+	/** @type {FileLoaderCallbacks} */
 	#callbacks;
 
 	/** @type {boolean} */
 	#isDestroyed = false;
 
+	/** @type {number} */
+	#dragEnterCounter = 0;
+
 	/**
 	 * @param {HTMLElement} dropZone - DOM-элемент зоны Drag & Drop
 	 * @param {HTMLInputElement} fileInput - DOM-элемент <input type="file">
 	 * @param {HTMLElement} statusEl - Элемент для отображения статуса
-	 * @param {FileReaderCallbacks} callbacks - Колбэки onDataLoaded и onError
+	 * @param {FileLoaderCallbacks} callbacks - Колбэки onDataLoaded и onError
 	 */
 	constructor(dropZone, fileInput, statusEl, callbacks) {
 		this.#dropZone = dropZone;
@@ -48,7 +54,7 @@ class FileReader {
 		this.#callbacks = callbacks;
 
 		this.#bindEvents();
-		Logger.info('FileReader', 'FileReader инициализирован');
+		Logger.info('FileLoader', 'FileLoader инициализирован');
 	}
 
 	/**
@@ -57,6 +63,9 @@ class FileReader {
 	 */
 	#bindEvents() {
 		// Drag & Drop на зоне загрузки
+		this.#dropZone.addEventListener('dragenter', (e) =>
+			this.#onDragEnter(e),
+		);
 		this.#dropZone.addEventListener('dragover', (e) => this.#onDragOver(e));
 		this.#dropZone.addEventListener('dragleave', (e) =>
 			this.#onDragLeave(e),
@@ -88,7 +97,20 @@ class FileReader {
 		this.#callbacks = null;
 		this.#isDestroyed = true;
 
-		Logger.debug('FileReader', 'FileReader уничтожен');
+		Logger.debug('FileLoader', 'FileLoader уничтожен');
+	}
+
+	/**
+	 * Обработчик dragenter — добавляет визуальный класс.
+	 * Использует счётчик для корректной обработки вложенных элементов.
+	 * @param {DragEvent} e
+	 * @private
+	 */
+	#onDragEnter(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		this.#dragEnterCounter++;
+		this.#dropZone.classList.add('upload-zone--dragover');
 	}
 
 	/**
@@ -98,18 +120,25 @@ class FileReader {
 	 */
 	#onDragOver(e) {
 		e.preventDefault();
+		e.stopPropagation();
 		e.dataTransfer.dropEffect = 'copy';
 		this.#dropZone.classList.add('upload-zone--dragover');
 	}
 
 	/**
 	 * Обработчик dragleave — убирает визуальный класс.
+	 * Использует счётчик для предотвращения мерцания при наведении на дочерние элементы.
 	 * @param {DragEvent} e
 	 * @private
 	 */
 	#onDragLeave(e) {
 		e.preventDefault();
-		this.#dropZone.classList.remove('upload-zone--dragover');
+		e.stopPropagation();
+		this.#dragEnterCounter--;
+		if (this.#dragEnterCounter <= 0) {
+			this.#dragEnterCounter = 0;
+			this.#dropZone.classList.remove('upload-zone--dragover');
+		}
 	}
 
 	/**
@@ -119,6 +148,8 @@ class FileReader {
 	 */
 	#onDrop(e) {
 		e.preventDefault();
+		e.stopPropagation();
+		this.#dragEnterCounter = 0;
 		this.#dropZone.classList.remove('upload-zone--dragover');
 
 		const files = e.dataTransfer.files;
@@ -152,13 +183,14 @@ class FileReader {
 		}
 
 		Logger.info(
-			'FileReader',
+			'FileLoader',
 			`Загрузка файла: ${file.name} (${Logger.time('readFile', () => file.size)} байт)`,
 		);
 
 		this.#setStatus('Чтение файла...');
 
-		const reader = new FileReader();
+		// Используем window.FileReader (браузерный API), а не наш класс FileLoader
+		const reader = new window.FileReader();
 
 		reader.onload = () => {
 			try {
@@ -210,7 +242,7 @@ class FileReader {
 		// Если загружен плоский массив — оборачиваем в структуру hits
 		if (Array.isArray(parsed)) {
 			Logger.info(
-				'FileReader',
+				'FileLoader',
 				`Обнаружен плоский массив (${parsed.length} записей). Оборачиваю в структуру hits.`,
 			);
 			return {
@@ -230,7 +262,7 @@ class FileReader {
 			Array.isArray(parsed.hits.hits)
 		) {
 			Logger.info(
-				'FileReader',
+				'FileLoader',
 				`Загружена структура hits (${parsed.hits.hits.length} записей).`,
 			);
 			return parsed;
@@ -239,7 +271,7 @@ class FileReader {
 		// Если объект, но не массив и не hits — оборачиваем как единственный _source
 		if (parsed && typeof parsed === 'object') {
 			Logger.info(
-				'FileReader',
+				'FileLoader',
 				'Загружен одиночный объект. Оборачиваю в структуру hits.',
 			);
 			return {
@@ -260,7 +292,7 @@ class FileReader {
 	 * @private
 	 */
 	#showError(message) {
-		Logger.error('FileReader', message);
+		Logger.error('FileLoader', message);
 		this.#setStatus(message, 'error');
 		this.#showModal(message);
 	}
@@ -325,10 +357,10 @@ class FileReader {
 		this.#setStatus('');
 		this.#fileInput.value = '';
 		Logger.info(
-			'FileReader',
-			'FileReader восстановлен в состояние ожидания файла',
+			'FileLoader',
+			'FileLoader восстановлен в состояние ожидания файла',
 		);
 	}
 }
 
-export { FileReader };
+export { FileLoader };
