@@ -223,6 +223,4 @@ RenderEngine.prototype.destroy = function () {
 };
 
 // Экспорт
-module.exports = {
-	RenderEngine: RenderEngine,
-};
+export { RenderEngine };

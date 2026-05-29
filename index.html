@@ -27,26 +27,45 @@
       </div>
     </header>
 
-    <!-- Область визуализации (центральная) -->
-    <main id="visualization-area" class="visualization-area">
-      <svg
-        id="svg-container"
-        class="visualization-area__svg"
-        width="100%"
-        height="100%"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <text
-          x="50%"
-          y="50%"
-          text-anchor="middle"
-          dominant-baseline="middle"
-          class="visualization-area__placeholder"
+    <!-- Статус-баннер -->
+    <div id="status-banner-container"></div>
+
+    <!-- Основной контент: список трейсов + визуализация + детали -->
+    <div class="main-layout">
+      <!-- Список трейсов (левая панель) -->
+      <aside class="trace-list-panel">
+        <div class="trace-list-panel__header">
+          <h2 class="trace-list-panel__title">Трейсы</h2>
+        </div>
+        <div id="trace-list-container"></div>
+      </aside>
+
+      <!-- Область визуализации (центральная) -->
+      <main class="visualization-area" id="visualization-area">
+        <svg
+          id="svg-container"
+          class="visualization-area__svg"
+          width="100%"
+          height="100%"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          Загрузите файл с трейсами для начала работы
-        </text>
-      </svg>
-    </main>
+          <text
+            x="50%"
+            y="50%"
+            text-anchor="middle"
+            dominant-baseline="middle"
+            class="visualization-area__placeholder"
+          >
+            Загрузите файл с трейсами для начала работы
+          </text>
+        </svg>
+      </main>
+
+      <!-- Панель деталей спана (правая панель) -->
+      <aside class="detail-panel-wrapper">
+        <div id="detail-panel-container"></div>
+      </aside>
+    </div>
 
     <!-- Таблица логов (нижняя часть) -->
     <footer id="log-table" class="log-table">
@@ -64,6 +83,9 @@
         <p class="log-table__placeholder">Логи будут отображаться здесь</p>
       </div>
     </footer>
+
+    <!-- Raw Log Viewer (некатегоризированные записи) -->
+    <div id="raw-log-container"></div>
   </div>
 
   <script type="module" src="src/main.js"></script>

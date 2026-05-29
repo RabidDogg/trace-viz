@@ -246,8 +246,4 @@ function calculateTimeline(items, config) {
 }
 
 // Экспорт
-module.exports = {
-	calculateTimeline: calculateTimeline,
-	calculateTickInterval: calculateTickInterval,
-	formatTimestamp: formatTimestamp,
-};
+export { calculateTimeline, calculateTickInterval, formatTimestamp };
