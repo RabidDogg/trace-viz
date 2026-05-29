@@ -334,3 +334,106 @@ body {
   fill: #cccccc;
   user-select: none;
 }
+
+/* ==========================================================================
+   Бары спанов (SVG)
+   ========================================================================== */
+
+.span-bar {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.span-bar__rect {
+  stroke: none;
+  transition: opacity 0.15s ease;
+}
+
+.span-bar__label {
+  font-family: var(--font-family);
+  font-size: 11px;
+  fill: #ffffff;
+  pointer-events: none;
+  user-select: none;
+  dominant-baseline: central;
+}
+
+.span-bar__error-icon {
+  font-family: var(--font-family);
+  fill: #ffffff;
+  pointer-events: none;
+  user-select: none;
+  dominant-baseline: central;
+}
+
+.span-bar--orphan {
+  opacity: 0.85;
+}
+
+.span-bar--error {
+  opacity: 0.9;
+}
+
+.span-bar--highlighted {
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: brightness(1.2);
+}
+
+/* ==========================================================================
+   Тултип для баров спанов
+   ========================================================================== */
+
+.span-bar__tooltip {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  min-width: 200px;
+  max-width: 320px;
+  padding: 10px 14px;
+  background-color: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  font-family: var(--font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e0e0e0;
+}
+
+.span-bar__tooltip-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.span-bar__tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.span-bar__tooltip-label {
+  color: #9ca3af;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.span-bar__tooltip-value {
+  color: #e0e0e0;
+  text-align: right;
+  word-break: break-all;
+}
+
+.span-bar__tooltip-error {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 12px;
+}
