@@ -13,7 +13,7 @@
   --color-info: #3b82f6;
   --color-success: #10b981;
   --border-color: #e5e7eb;
-  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-color: rgba(92, 169, 133, 0.36);
   --font-family: 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'Cascadia Code', 'Fira Code', monospace;
 }
@@ -44,8 +44,8 @@ body {
 #app {
   width: 1920px;
   max-width: 100%;
-  min-height: 100vh;
-  margin: 0 auto;
+  min-height: 98vh;
+  margin: 10px auto;
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary);
@@ -57,9 +57,9 @@ body {
    ========================================================================== */
 .upload-zone {
   flex-shrink: 0;
-  padding: 32px 24px;
-  border-bottom: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
+  padding: 22px 16px;
+  border: 2px dashed var(--border-color);
+  background-color: var(--bg-primary);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -142,8 +142,8 @@ body {
    Область визуализации (SVG-контейнер)
    ========================================================================== */
 .visualization-area {
-  flex: 1 1 auto;
-  min-height: 400px;
+  flex: 1;
+  min-height: 600px;
   overflow: hidden;
   background-color: var(--bg-primary);
 }
@@ -152,7 +152,7 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-  min-height: 400px;
+  min-height: 600px;
 }
 
 .visualization-area__placeholder {
@@ -227,6 +227,14 @@ body {
   border-bottom: 1px solid var(--border-color);
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.log-entry__timestamp {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-right: 8px;
+  user-select: none;
 }
 
 .log-entry--debug {
@@ -494,8 +502,7 @@ body {
 
 .main-layout {
   display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1;
   border-bottom: 1px solid var(--border-color);
 }
 
