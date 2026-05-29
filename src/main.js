@@ -2,22 +2,54 @@
  * @fileoverview
  * Точка входа приложения Trace Viz.
  * Инициализирует FileReader, Logger и связывает их с DOM-элементами.
- * Содержит заглушки для будущих этапов пайплайна: parse → process → render.
+ * Реализует пайплайн: parse → process → render.
  */
 
 'use strict';
 
 import { Logger } from './utils/Logger.js';
 import { FileReader } from './io/FileReader.js';
+import { extractSources } from './parser/OpenSourceExtractor.js';
+import { normalizeRecords } from './parser/DataNormalizer.js';
 
 /**
- * Заглушка этапа парсинга.
+ * Этап парсинга: извлекает источники из структуры данных и нормализует их.
  * @param {Object} data - сырые данные из FileReader
- * @returns {Object} распарсенные данные
+ * @returns {Object} распарсенные данные с полями sources (нормализованные записи) и raw (исходные)
  */
 function parseData(data) {
-	Logger.info('parseData: заглушка — данные получены, парсинг не реализован');
-	return data;
+	Logger.info('parseData: запуск пайплайна парсинга');
+
+	const sources = extractSources(data);
+	Logger.info(`parseData: извлечено ${sources.length} источников`);
+
+	const normalized = normalizeRecords(sources);
+	Logger.info(`parseData: нормализовано ${normalized.length} записей`);
+
+	// Сохраняем в window.__APP_DATA__ для отладки
+	if (typeof window !== 'undefined') {
+		window.__APP_DATA__ = {
+			raw: data,
+			sources: sources,
+			normalized: normalized,
+		};
+	}
+
+	// Логируем ошибки парсинга
+	let errorCount = 0;
+	for (let i = 0; i < normalized.length; i++) {
+		if (normalized[i].isError) {
+			errorCount++;
+		}
+	}
+	if (errorCount > 0) {
+		Logger.warn(`parseData: обнаружено ${errorCount} записей с ошибками`);
+	}
+
+	return {
+		normalized: normalized,
+		raw: data,
+	};
 }
 
 /**
