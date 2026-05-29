@@ -1,0 +1,302 @@
+/* ==========================================================================
+   Trace Viz — Глобальные стили
+   ========================================================================== */
+
+/* --- CSS-переменные (светлая тема) --- */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f7fa;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b7280;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+  --color-success: #10b981;
+  --border-color: #e5e7eb;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --font-family: 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+/* --- Сброс стилей --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Макет приложения --- */
+#app {
+  width: 1920px;
+  max-width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+  box-shadow: 0 0 40px var(--shadow-color);
+}
+
+/* ==========================================================================
+   Зона загрузки (Drag & Drop)
+   ========================================================================== */
+.upload-zone {
+  flex-shrink: 0;
+  padding: 32px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.upload-zone--dragover {
+  background-color: #eff6ff;
+  border-color: var(--color-info);
+  outline: 2px dashed var(--color-info);
+  outline-offset: -8px;
+}
+
+.upload-zone__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-zone__icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.upload-zone__text {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.upload-zone__hint {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.upload-zone__label {
+  cursor: pointer;
+}
+
+.upload-zone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.upload-zone__button {
+  display: inline-block;
+  padding: 10px 24px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-info);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.upload-zone__button:hover {
+  background-color: #2563eb;
+}
+
+.upload-zone__status {
+  min-height: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.upload-zone__status--error {
+  color: var(--color-error);
+}
+
+.upload-zone__status--success {
+  color: var(--color-success);
+}
+
+/* ==========================================================================
+   Область визуализации (SVG-контейнер)
+   ========================================================================== */
+.visualization-area {
+  flex: 1 1 auto;
+  min-height: 400px;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.visualization-area__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.visualization-area__placeholder {
+  font-family: var(--font-family);
+  font-size: 16px;
+  fill: var(--text-secondary);
+  user-select: none;
+}
+
+/* ==========================================================================
+   Таблица логов (нижняя часть)
+   ========================================================================== */
+.log-table {
+  flex-shrink: 0;
+  max-height: 240px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+}
+
+.log-table__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.log-table__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.log-table__clear-btn {
+  padding: 4px 12px;
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.log-table__clear-btn:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.log-table__container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 8px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.log-table__placeholder {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* --- Стили для строк логов --- */
+.log-entry {
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border-color);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-entry--debug {
+  color: var(--text-secondary);
+}
+
+.log-entry--info {
+  color: var(--color-info);
+}
+
+.log-entry--warn {
+  color: var(--color-warning);
+}
+
+.log-entry--error {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Модальное окно для ошибок
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.modal {
+  max-width: 480px;
+  width: 90%;
+  padding: 24px;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--shadow-color);
+}
+
+.modal__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--color-error);
+}
+
+.modal__message {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.modal__button {
+  display: block;
+  margin-left: auto;
+  padding: 8px 20px;
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-info);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal__button:hover {
+  background-color: #2563eb;
+}
