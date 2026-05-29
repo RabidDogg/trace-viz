@@ -17,148 +17,160 @@
  * @param {import('./Engine.js').RenderEngine} engine - Экземпляр RenderEngine
  * @param {import('../processor/TimelineCalculator.js').TimelineScale} scale - Данные временной шкалы
  */
-function TimelineAxis(engine, scale) {
+class TimelineAxis {
 	/**
-	 * Ссылка на RenderEngine.
-	 * @type {import('./Engine.js').RenderEngine}
-	 * @private
+	 * @param {import('./Engine.js').RenderEngine} engine - Экземпляр RenderEngine
+	 * @param {import('../processor/TimelineCalculator.js').TimelineScale} scale - Данные временной шкалы
 	 */
-	this._engine = engine;
+	constructor(engine, scale) {
+		/**
+		 * Ссылка на RenderEngine.
+		 * @type {import('./Engine.js').RenderEngine}
+		 * @private
+		 */
+		this._engine = engine;
 
-	/**
-	 * Текущий масштаб временной шкалы.
-	 * @type {import('../processor/TimelineCalculator.js').TimelineScale|null}
-	 * @private
-	 */
-	this._scale = scale || null;
+		/**
+		 * Текущий масштаб временной шкалы.
+		 * @type {import('../processor/TimelineCalculator.js').TimelineScale|null}
+		 * @private
+		 */
+		this._scale = scale || null;
 
-	/**
-	 * Высота оси в пикселях.
-	 * @type {number}
-	 * @private
-	 */
-	this._axisHeight = 30;
+		/**
+		 * Высота оси в пикселях.
+		 * @type {number}
+		 * @private
+		 */
+		this._axisHeight = 30;
 
-	/**
-	 * CSS-классы для элементов оси.
-	 * @type {Object}
-	 * @private
-	 */
-	this._classes = {
-		axisLine: 'axis__line',
-		tick: 'axis__tick',
-		tickMajor: 'axis__tick--major',
-		label: 'axis__label',
-		labelMajor: 'axis__label--major',
-	};
-}
-
-/**
- * Отрисовывает ось времени.
- *
- * Создаёт:
- * - Горизонтальную линию внизу оси
- * - Вертикальные метки (ticks) — короткие линии
- * - Текст подписи под каждой major-меткой
- *
- * Все элементы создаются через createElementNS, textContent для текста.
- */
-TimelineAxis.prototype.render = function () {
-	if (!this._scale || !this._scale.ticks || this._scale.ticks.length === 0) {
-		return;
+		/**
+		 * CSS-классы для элементов оси.
+		 * @type {Object}
+		 * @private
+		 */
+		this._classes = {
+			axisLine: 'axis__line',
+			tick: 'axis__tick',
+			tickMajor: 'axis__tick--major',
+			label: 'axis__label',
+			labelMajor: 'axis__label--major',
+		};
 	}
 
-	var axisGroup = this._engine.getAxisGroup();
-	if (!axisGroup) {
-		return;
-	}
+	/**
+	 * Отрисовывает ось времени.
+	 *
+	 * Создаёт:
+	 * - Горизонтальную линию внизу оси
+	 * - Вертикальные метки (ticks) — короткие линии
+	 * - Текст подписи под каждой major-меткой
+	 *
+	 * Все элементы создаются через createElementNS, textContent для текста.
+	 */
+	render() {
+		if (
+			!this._scale ||
+			!this._scale.ticks ||
+			this._scale.ticks.length === 0
+		) {
+			return;
+		}
 
-	// Очищаем ось перед отрисовкой
-	axisGroup.textContent = '';
+		const axisGroup = this._engine.getAxisGroup();
+		if (!axisGroup) {
+			return;
+		}
 
-	var svgHeight = this._engine._config ? this._engine._config.height : 600;
-	var axisY = svgHeight - this._axisHeight;
-	var ticks = this._scale.ticks;
+		// Очищаем ось перед отрисовкой
+		axisGroup.textContent = '';
 
-	// 1. Горизонтальная линия оси
-	var axisLine = document.createElementNS(
-		'http://www.w3.org/2000/svg',
-		'line',
-	);
-	axisLine.setAttribute('x1', '0');
-	axisLine.setAttribute('y1', String(axisY));
-	axisLine.setAttribute(
-		'x2',
-		String(this._scale.ticks[this._scale.ticks.length - 1].x),
-	);
-	axisLine.setAttribute('y2', String(axisY));
-	axisLine.setAttribute('class', this._classes.axisLine);
-	axisGroup.appendChild(axisLine);
+		const svgHeight = this._engine._config
+			? this._engine._config.height
+			: 600;
+		const axisY = svgHeight - this._axisHeight;
+		const ticks = this._scale.ticks;
 
-	// 2. Метки (ticks) и подписи
-	for (var i = 0; i < ticks.length; i++) {
-		var tick = ticks[i];
-		var isMajor = tick.isMajor;
-		var tickHeight = isMajor ? 10 : 6;
-
-		// Вертикальная линия метки
-		var tickLine = document.createElementNS(
+		// 1. Горизонтальная линия оси
+		const axisLine = document.createElementNS(
 			'http://www.w3.org/2000/svg',
 			'line',
 		);
-		tickLine.setAttribute('x1', String(tick.x));
-		tickLine.setAttribute('y1', String(axisY));
-		tickLine.setAttribute('x2', String(tick.x));
-		tickLine.setAttribute('y2', String(axisY - tickHeight));
-		tickLine.setAttribute(
-			'class',
-			isMajor ? this._classes.tickMajor : this._classes.tick,
+		axisLine.setAttribute('x1', '0');
+		axisLine.setAttribute('y1', String(axisY));
+		axisLine.setAttribute(
+			'x2',
+			String(this._scale.ticks[this._scale.ticks.length - 1].x),
 		);
-		axisGroup.appendChild(tickLine);
+		axisLine.setAttribute('y2', String(axisY));
+		axisLine.setAttribute('class', this._classes.axisLine);
+		axisGroup.appendChild(axisLine);
 
-		// Подпись только для major-меток
-		if (isMajor) {
-			var label = document.createElementNS(
+		// 2. Метки (ticks) и подписи
+		for (let i = 0; i < ticks.length; i++) {
+			const tick = ticks[i];
+			const isMajor = tick.isMajor;
+			const tickHeight = isMajor ? 10 : 6;
+
+			// Вертикальная линия метки
+			const tickLine = document.createElementNS(
 				'http://www.w3.org/2000/svg',
-				'text',
+				'line',
 			);
-			label.setAttribute('x', String(tick.x));
-			label.setAttribute('y', String(axisY + 16));
-			label.setAttribute('text-anchor', 'middle');
-			label.setAttribute(
+			tickLine.setAttribute('x1', String(tick.x));
+			tickLine.setAttribute('y1', String(axisY));
+			tickLine.setAttribute('x2', String(tick.x));
+			tickLine.setAttribute('y2', String(axisY - tickHeight));
+			tickLine.setAttribute(
 				'class',
-				isMajor ? this._classes.labelMajor : this._classes.label,
+				isMajor ? this._classes.tickMajor : this._classes.tick,
 			);
-			label.textContent = tick.label;
-			axisGroup.appendChild(label);
+			axisGroup.appendChild(tickLine);
+
+			// Подпись только для major-меток
+			if (isMajor) {
+				const label = document.createElementNS(
+					'http://www.w3.org/2000/svg',
+					'text',
+				);
+				label.setAttribute('x', String(tick.x));
+				label.setAttribute('y', String(axisY + 16));
+				label.setAttribute('text-anchor', 'middle');
+				label.setAttribute(
+					'class',
+					isMajor ? this._classes.labelMajor : this._classes.label,
+				);
+				label.textContent = tick.label;
+				axisGroup.appendChild(label);
+			}
 		}
 	}
-};
 
-/**
- * Обновляет ось с новым масштабом.
- *
- * Сохраняет новый scale и вызывает render() для перерисовки.
- *
- * @param {import('../processor/TimelineCalculator.js').TimelineScale} scale - Новые данные временной шкалы
- */
-TimelineAxis.prototype.update = function (scale) {
-	this._scale = scale;
-	this.render();
-};
-
-/**
- * Очищает ось времени.
- *
- * Удаляет все дочерние элементы из axis-group.
- */
-TimelineAxis.prototype.clear = function () {
-	var axisGroup = this._engine.getAxisGroup();
-	if (axisGroup) {
-		axisGroup.textContent = '';
+	/**
+	 * Обновляет ось с новым масштабом.
+	 *
+	 * Сохраняет новый scale и вызывает render() для перерисовки.
+	 *
+	 * @param {import('../processor/TimelineCalculator.js').TimelineScale} scale - Новые данные временной шкалы
+	 */
+	update(scale) {
+		this._scale = scale;
+		this.render();
 	}
-	this._scale = null;
-};
+
+	/**
+	 * Очищает ось времени.
+	 *
+	 * Удаляет все дочерние элементы из axis-group.
+	 */
+	clear() {
+		const axisGroup = this._engine.getAxisGroup();
+		if (axisGroup) {
+			axisGroup.textContent = '';
+		}
+		this._scale = null;
+	}
+}
 
 // Экспорт
 export { TimelineAxis };

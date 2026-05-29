@@ -26,7 +26,7 @@
  * @enum {string}
  * @private
  */
-var CSS = {
+const CSS = {
 	PANEL: 'detail-panel',
 	PANEL_HIDDEN: 'detail-panel--hidden',
 	PANEL_TITLE: 'detail-panel__title',
@@ -60,423 +60,432 @@ var CSS = {
  * panel.show(selectedRecord);
  * panel.hide();
  */
-export function DetailPanel(containerId) {
+class DetailPanel {
 	/**
-	 * ID контейнера.
-	 * @type {string}
+	 * @param {string} containerId - ID DOM-элемента, в который будет вставлена панель
+	 */
+	constructor(containerId) {
+		/**
+		 * ID контейнера.
+		 * @type {string}
+		 * @private
+		 */
+		this._containerId = containerId;
+
+		/**
+		 * Ссылка на корневой элемент панели.
+		 * @type {HTMLElement|null}
+		 * @private
+		 */
+		this._element = null;
+
+		/**
+		 * Ссылка на контейнер содержимого.
+		 * @type {HTMLElement|null}
+		 * @private
+		 */
+		this._contentEl = null;
+
+		// Инициализация DOM-структуры
+		this._init();
+	}
+
+	/**
+	 * Создаёт DOM-структуру панели.
+	 *
 	 * @private
 	 */
-	this._containerId = containerId;
+	_init() {
+		const container = document.getElementById(this._containerId);
+		if (!container) {
+			return;
+		}
+
+		// Корневой элемент панели
+		const panel = document.createElement('div');
+		panel.className = CSS.PANEL + ' ' + CSS.PANEL_HIDDEN;
+
+		// Заголовок панели
+		const title = document.createElement('div');
+		title.className = CSS.PANEL_TITLE;
+
+		const titleText = document.createElement('span');
+		titleText.textContent =
+			'\u0414\u0435\u0442\u0430\u043B\u0438 \u0441\u043F\u0430\u043D\u0430';
+		title.appendChild(titleText);
+
+		// Кнопка закрытия
+		const closeBtn = document.createElement('button');
+		closeBtn.className = CSS.PANEL_CLOSE;
+		closeBtn.textContent = '\u2716';
+		closeBtn.setAttribute(
+			'aria-label',
+			'\u0417\u0430\u043A\u0440\u044B\u0442\u044C',
+		);
+		closeBtn.addEventListener('click', () => {
+			this.hide();
+		});
+		title.appendChild(closeBtn);
+
+		panel.appendChild(title);
+
+		// Контейнер содержимого
+		const content = document.createElement('div');
+		content.className = CSS.PANEL_CONTENT;
+		panel.appendChild(content);
+		this._contentEl = content;
+
+		container.appendChild(panel);
+		this._element = panel;
+	}
 
 	/**
-	 * Ссылка на корневой элемент панели.
-	 * @type {HTMLElement|null}
-	 * @private
+	 * Отображает детали спана.
+	 *
+	 * @param {Object} record - Нормализованная запись спана.
+	 *   Ожидаемые поля:
+	 *     - spanId {string|null}
+	 *     - parentId {string|null}
+	 *     - traceId {string|null}
+	 *     - stageName {string|null}
+	 *     - timestampMs {number|null}
+	 *     - durationMs {number|null}
+	 *     - logLevel {string|null}
+	 *     - isError {boolean}
+	 *     - errorMessage {string|null}
+	 *     - message {string|null}
+	 *     - exception {string|null}
+	 *     - raw {Object|null} - сырые данные для JSON-блока
 	 */
-	this._element = null;
+	show(record) {
+		if (!this._element || !this._contentEl) {
+			return;
+		}
+
+		// Очищаем содержимое
+		this._contentEl.textContent = '';
+
+		if (!record) {
+			return;
+		}
+
+		// 1. Error-баннер (если есть ошибка)
+		if (record.isError === true) {
+			const errorBanner = this._createErrorBanner(record);
+			this._contentEl.appendChild(errorBanner);
+		}
+
+		// 2. Основные поля
+		const fieldsSection = this._createFieldsSection(record);
+		this._contentEl.appendChild(fieldsSection);
+
+		// 3. Message (полный текст)
+		if (record.message || (record.raw && record.raw.Message)) {
+			const messageSection = this._createMessageSection(record);
+			this._contentEl.appendChild(messageSection);
+		}
+
+		// 4. Exception (если есть)
+		if (record.exception) {
+			const exceptionSection = this._createExceptionSection(record);
+			this._contentEl.appendChild(exceptionSection);
+		}
+
+		// 5. Raw JSON (сворачиваемый блок)
+		const rawJsonSection = this._createRawJsonSection(record);
+		this._contentEl.appendChild(rawJsonSection);
+
+		// Показываем панель
+		this._element.classList.remove(CSS.PANEL_HIDDEN);
+	}
 
 	/**
-	 * Ссылка на контейнер содержимого.
-	 * @type {HTMLElement|null}
+	 * Создаёт блок ошибки с красным фоном.
+	 *
+	 * @param {Object} record - Запись спана
+	 * @returns {HTMLElement} Элемент баннера ошибки
 	 * @private
 	 */
-	this._contentEl = null;
+	_createErrorBanner(record) {
+		const banner = document.createElement('div');
+		banner.className = CSS.ERROR_BANNER;
 
-	// Инициализация DOM-структуры
-	this._init();
-}
+		const title = document.createElement('div');
+		title.className = CSS.ERROR_BANNER_TITLE;
+		title.textContent = '\u26A0\uFE0F \u041E\u0448\u0438\u0431\u043A\u0430';
+		banner.appendChild(title);
 
-/**
- * Создаёт DOM-структуру панели.
- *
- * @private
- */
-DetailPanel.prototype._init = function () {
-	var container = document.getElementById(this._containerId);
-	if (!container) {
-		return;
+		if (record.errorMessage) {
+			const msg = document.createElement('div');
+			msg.className = CSS.ERROR_BANNER_MESSAGE;
+			msg.textContent = record.errorMessage;
+			banner.appendChild(msg);
+		}
+
+		return banner;
 	}
 
-	var self = this;
+	/**
+	 * Создаёт секцию с основными полями записи.
+	 *
+	 * @param {Object} record - Запись спана
+	 * @returns {HTMLElement} Элемент секции
+	 * @private
+	 */
+	_createFieldsSection(record) {
+		const section = document.createElement('div');
+		section.className = CSS.SECTION;
 
-	// Корневой элемент панели
-	var panel = document.createElement('div');
-	panel.className = CSS.PANEL + ' ' + CSS.PANEL_HIDDEN;
+		const title = document.createElement('div');
+		title.className = CSS.SECTION_TITLE;
+		title.textContent =
+			'\u041E\u0441\u043D\u043E\u0432\u043D\u0430\u044F \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F';
+		section.appendChild(title);
 
-	// Заголовок панели
-	var title = document.createElement('div');
-	title.className = CSS.PANEL_TITLE;
+		// Форматируем поля
+		const fields = [
+			{
+				label: 'SpanId',
+				value:
+					record.spanId ||
+					'\u041E\u0440\u0444\u0430\u043D-\u0437\u0430\u043F\u0438\u0441\u044C',
+			},
+			{
+				label: 'ParentId',
+				value:
+					record.parentId ||
+					'\u041A\u043E\u0440\u043D\u0435\u0432\u043E\u0439 \u0441\u043F\u0430\u043D',
+			},
+			{
+				label: 'TraceId',
+				value: record.traceId || '\u2014',
+			},
+			{
+				label: 'StageName',
+				value: record.stageName || '\u2014',
+			},
+			{
+				label: 'Timestamp',
+				value: this._formatTimestamp(record.timestampMs),
+			},
+			{
+				label: 'Duration',
+				value: this._formatDuration(record.durationMs),
+			},
+			{
+				label: 'LogLevel',
+				value: record.logLevel || '\u2014',
+			},
+		];
 
-	var titleText = document.createElement('span');
-	titleText.textContent =
-		'\u0414\u0435\u0442\u0430\u043B\u0438 \u0441\u043F\u0430\u043D\u0430';
-	title.appendChild(titleText);
+		for (let i = 0; i < fields.length; i++) {
+			const fieldEl = this._createField(
+				fields[i].label,
+				fields[i].value,
+				true,
+			);
+			section.appendChild(fieldEl);
+		}
 
-	// Кнопка закрытия
-	var closeBtn = document.createElement('button');
-	closeBtn.className = CSS.PANEL_CLOSE;
-	closeBtn.textContent = '\u2716';
-	closeBtn.setAttribute(
-		'aria-label',
-		'\u0417\u0430\u043A\u0440\u044B\u0442\u044C',
-	);
-	closeBtn.addEventListener('click', function () {
-		self.hide();
-	});
-	title.appendChild(closeBtn);
-
-	panel.appendChild(title);
-
-	// Контейнер содержимого
-	var content = document.createElement('div');
-	content.className = CSS.PANEL_CONTENT;
-	panel.appendChild(content);
-	this._contentEl = content;
-
-	container.appendChild(panel);
-	this._element = panel;
-};
-
-/**
- * Отображает детали спана.
- *
- * @param {Object} record - Нормализованная запись спана.
- *   Ожидаемые поля:
- *     - spanId {string|null}
- *     - parentId {string|null}
- *     - traceId {string|null}
- *     - stageName {string|null}
- *     - timestampMs {number|null}
- *     - durationMs {number|null}
- *     - logLevel {string|null}
- *     - isError {boolean}
- *     - errorMessage {string|null}
- *     - message {string|null}
- *     - exception {string|null}
- *     - raw {Object|null} - сырые данные для JSON-блока
- */
-DetailPanel.prototype.show = function (record) {
-	if (!this._element || !this._contentEl) {
-		return;
+		return section;
 	}
 
-	// Очищаем содержимое
-	this._contentEl.textContent = '';
+	/**
+	 * Создаёт секцию с полным текстом сообщения.
+	 *
+	 * @param {Object} record - Запись спана
+	 * @returns {HTMLElement} Элемент секции
+	 * @private
+	 */
+	_createMessageSection(record) {
+		const section = document.createElement('div');
+		section.className = CSS.SECTION;
 
-	if (!record) {
-		return;
-	}
+		const title = document.createElement('div');
+		title.className = CSS.SECTION_TITLE;
+		title.textContent =
+			'\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435';
+		section.appendChild(title);
 
-	// 1. Error-баннер (если есть ошибка)
-	if (record.isError === true) {
-		var errorBanner = this._createErrorBanner(record);
-		this._contentEl.appendChild(errorBanner);
-	}
+		let messageText = record.message || '';
+		if (!messageText && record.raw && record.raw.Message) {
+			messageText = record.raw.Message;
+		}
 
-	// 2. Основные поля
-	var fieldsSection = this._createFieldsSection(record);
-	this._contentEl.appendChild(fieldsSection);
-
-	// 3. Message (полный текст)
-	if (record.message || (record.raw && record.raw.Message)) {
-		var messageSection = this._createMessageSection(record);
-		this._contentEl.appendChild(messageSection);
-	}
-
-	// 4. Exception (если есть)
-	if (record.exception) {
-		var exceptionSection = this._createExceptionSection(record);
-		this._contentEl.appendChild(exceptionSection);
-	}
-
-	// 5. Raw JSON (сворачиваемый блок)
-	var rawJsonSection = this._createRawJsonSection(record);
-	this._contentEl.appendChild(rawJsonSection);
-
-	// Показываем панель
-	this._element.classList.remove(CSS.PANEL_HIDDEN);
-};
-
-/**
- * Создаёт блок ошибки с красным фоном.
- *
- * @param {Object} record - Запись спана
- * @returns {HTMLElement} Элемент баннера ошибки
- * @private
- */
-DetailPanel.prototype._createErrorBanner = function (record) {
-	var banner = document.createElement('div');
-	banner.className = CSS.ERROR_BANNER;
-
-	var title = document.createElement('div');
-	title.className = CSS.ERROR_BANNER_TITLE;
-	title.textContent = '\u26A0\uFE0F \u041E\u0448\u0438\u0431\u043A\u0430';
-	banner.appendChild(title);
-
-	if (record.errorMessage) {
-		var msg = document.createElement('div');
-		msg.className = CSS.ERROR_BANNER_MESSAGE;
-		msg.textContent = record.errorMessage;
-		banner.appendChild(msg);
-	}
-
-	return banner;
-};
-
-/**
- * Создаёт секцию с основными полями записи.
- *
- * @param {Object} record - Запись спана
- * @returns {HTMLElement} Элемент секции
- * @private
- */
-DetailPanel.prototype._createFieldsSection = function (record) {
-	var section = document.createElement('div');
-	section.className = CSS.SECTION;
-
-	var title = document.createElement('div');
-	title.className = CSS.SECTION_TITLE;
-	title.textContent =
-		'\u041E\u0441\u043D\u043E\u0432\u043D\u0430\u044F \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F';
-	section.appendChild(title);
-
-	// Форматируем поля
-	var fields = [
-		{
-			label: 'SpanId',
-			value:
-				record.spanId ||
-				'\u041E\u0440\u0444\u0430\u043D-\u0437\u0430\u043F\u0438\u0441\u044C',
-		},
-		{
-			label: 'ParentId',
-			value:
-				record.parentId ||
-				'\u041A\u043E\u0440\u043D\u0435\u0432\u043E\u0439 \u0441\u043F\u0430\u043D',
-		},
-		{
-			label: 'TraceId',
-			value: record.traceId || '\u2014',
-		},
-		{
-			label: 'StageName',
-			value: record.stageName || '\u2014',
-		},
-		{
-			label: 'Timestamp',
-			value: this._formatTimestamp(record.timestampMs),
-		},
-		{
-			label: 'Duration',
-			value: this._formatDuration(record.durationMs),
-		},
-		{
-			label: 'LogLevel',
-			value: record.logLevel || '\u2014',
-		},
-	];
-
-	for (var i = 0; i < fields.length; i++) {
-		var fieldEl = this._createField(fields[i].label, fields[i].value, true);
+		const fieldEl = this._createField(
+			'\u0422\u0435\u043A\u0441\u0442',
+			messageText,
+			true,
+		);
 		section.appendChild(fieldEl);
+
+		return section;
 	}
 
-	return section;
-};
+	/**
+	 * Создаёт секцию с exception (stack trace).
+	 *
+	 * @param {Object} record - Запись спана
+	 * @returns {HTMLElement} Элемент секции
+	 * @private
+	 */
+	_createExceptionSection(record) {
+		const section = document.createElement('div');
+		section.className = CSS.SECTION;
 
-/**
- * Создаёт секцию с полным текстом сообщения.
- *
- * @param {Object} record - Запись спана
- * @returns {HTMLElement} Элемент секции
- * @private
- */
-DetailPanel.prototype._createMessageSection = function (record) {
-	var section = document.createElement('div');
-	section.className = CSS.SECTION;
+		const title = document.createElement('div');
+		title.className = CSS.EXCEPTION_TITLE;
+		title.textContent = '\u26A0\uFE0F Exception';
+		section.appendChild(title);
 
-	var title = document.createElement('div');
-	title.className = CSS.SECTION_TITLE;
-	title.textContent =
-		'\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435';
-	section.appendChild(title);
+		const text = document.createElement('pre');
+		text.className = CSS.EXCEPTION_TEXT;
+		text.textContent = record.exception;
+		section.appendChild(text);
 
-	var messageText = record.message || '';
-	if (!messageText && record.raw && record.raw.Message) {
-		messageText = record.raw.Message;
+		return section;
 	}
 
-	var fieldEl = this._createField(
-		'\u0422\u0435\u043A\u0441\u0442',
-		messageText,
-		true,
-	);
-	section.appendChild(fieldEl);
+	/**
+	 * Создаёт сворачиваемый блок с Raw JSON.
+	 *
+	 * @param {Object} record - Запись спана
+	 * @returns {HTMLElement} Элемент details с JSON
+	 * @private
+	 */
+	_createRawJsonSection(record) {
+		const section = document.createElement('div');
+		section.className = CSS.SECTION;
 
-	return section;
-};
+		const title = document.createElement('div');
+		title.className = CSS.SECTION_TITLE;
+		title.textContent = 'Raw JSON';
+		section.appendChild(title);
 
-/**
- * Создаёт секцию с exception (stack trace).
- *
- * @param {Object} record - Запись спана
- * @returns {HTMLElement} Элемент секции
- * @private
- */
-DetailPanel.prototype._createExceptionSection = function (record) {
-	var section = document.createElement('div');
-	section.className = CSS.SECTION;
+		// Сворачиваемый блок details
+		const details = document.createElement('details');
+		details.className = CSS.RAW_JSON;
 
-	var title = document.createElement('div');
-	title.className = CSS.EXCEPTION_TITLE;
-	title.textContent = '\u26A0\uFE0F Exception';
-	section.appendChild(title);
+		const summary = document.createElement('summary');
+		summary.className = CSS.RAW_JSON_SUMMARY;
+		summary.textContent =
+			'\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C JSON';
+		details.appendChild(summary);
 
-	var text = document.createElement('pre');
-	text.className = CSS.EXCEPTION_TEXT;
-	text.textContent = record.exception;
-	section.appendChild(text);
+		// Форматированный JSON
+		const pre = document.createElement('pre');
+		pre.className = CSS.RAW_JSON_PRE;
 
-	return section;
-};
+		const rawData = record.raw || {};
+		try {
+			const jsonStr = JSON.stringify(rawData, null, 2);
+			pre.textContent = jsonStr;
+		} catch (e) {
+			pre.textContent =
+				'\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0440\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 JSON';
+		}
 
-/**
- * Создаёт сворачиваемый блок с Raw JSON.
- *
- * @param {Object} record - Запись спана
- * @returns {HTMLElement} Элемент details с JSON
- * @private
- */
-DetailPanel.prototype._createRawJsonSection = function (record) {
-	var section = document.createElement('div');
-	section.className = CSS.SECTION;
+		details.appendChild(pre);
+		section.appendChild(details);
 
-	var title = document.createElement('div');
-	title.className = CSS.SECTION_TITLE;
-	title.textContent = 'Raw JSON';
-	section.appendChild(title);
-
-	// Сворачиваемый блок details
-	var details = document.createElement('details');
-	details.className = CSS.RAW_JSON;
-
-	var summary = document.createElement('summary');
-	summary.className = CSS.RAW_JSON_SUMMARY;
-	summary.textContent =
-		'\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C JSON';
-	details.appendChild(summary);
-
-	// Форматированный JSON
-	var pre = document.createElement('pre');
-	pre.className = CSS.RAW_JSON_PRE;
-
-	var rawData = record.raw || {};
-	try {
-		var jsonStr = JSON.stringify(rawData, null, 2);
-		pre.textContent = jsonStr;
-	} catch (e) {
-		pre.textContent =
-			'\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0440\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 JSON';
+		return section;
 	}
 
-	details.appendChild(pre);
-	section.appendChild(details);
+	/**
+	 * Создаёт элемент поля с label и value.
+	 *
+	 * @param {string} label - Метка поля
+	 * @param {string} value - Значение поля
+	 * @param {boolean} [mono=false] - Использовать моноширинный шрифт
+	 * @returns {HTMLElement} Элемент поля
+	 * @private
+	 */
+	_createField(label, value, mono) {
+		const field = document.createElement('div');
+		field.className = CSS.FIELD;
 
-	return section;
-};
+		const labelEl = document.createElement('span');
+		labelEl.className = CSS.FIELD_LABEL;
+		labelEl.textContent = label;
+		field.appendChild(labelEl);
 
-/**
- * Создаёт элемент поля с label и value.
- *
- * @param {string} label - Метка поля
- * @param {string} value - Значение поля
- * @param {boolean} [mono=false] - Использовать моноширинный шрифт
- * @returns {HTMLElement} Элемент поля
- * @private
- */
-DetailPanel.prototype._createField = function (label, value, mono) {
-	var field = document.createElement('div');
-	field.className = CSS.FIELD;
+		const valueEl = document.createElement('span');
+		valueEl.className = CSS.FIELD_VALUE;
+		if (mono === true) {
+			valueEl.classList.add(CSS.FIELD_VALUE_MONO);
+		}
+		valueEl.textContent = value;
+		field.appendChild(valueEl);
 
-	var labelEl = document.createElement('span');
-	labelEl.className = CSS.FIELD_LABEL;
-	labelEl.textContent = label;
-	field.appendChild(labelEl);
-
-	var valueEl = document.createElement('span');
-	valueEl.className = CSS.FIELD_VALUE;
-	if (mono === true) {
-		valueEl.classList.add(CSS.FIELD_VALUE_MONO);
-	}
-	valueEl.textContent = value;
-	field.appendChild(valueEl);
-
-	return field;
-};
-
-/**
- * Форматирует timestamp в ISO строку.
- *
- * @param {number|null} timestampMs - Timestamp в миллисекундах
- * @returns {string} Отформатированная дата или прочерк
- * @private
- */
-DetailPanel.prototype._formatTimestamp = function (timestampMs) {
-	if (timestampMs === null || timestampMs === undefined) {
-		return '\u2014';
+		return field;
 	}
 
-	try {
-		var date = new Date(timestampMs);
-		if (Number.isNaN(date.getTime())) {
+	/**
+	 * Форматирует timestamp в ISO строку.
+	 *
+	 * @param {number|null} timestampMs - Timestamp в миллисекундах
+	 * @returns {string} Отформатированная дата или прочерк
+	 * @private
+	 */
+	_formatTimestamp(timestampMs) {
+		if (timestampMs === null || timestampMs === undefined) {
 			return '\u2014';
 		}
-		return date.toISOString();
-	} catch (_) {
-		return '\u2014';
-	}
-};
 
-/**
- * Форматирует длительность в ms.
- *
- * @param {number|null} durationMs - Длительность в миллисекундах
- * @returns {string} Отформатированное значение или прочерк
- * @private
- */
-DetailPanel.prototype._formatDuration = function (durationMs) {
-	if (durationMs === null || durationMs === undefined) {
-		return '\u2014';
+		try {
+			const date = new Date(timestampMs);
+			if (Number.isNaN(date.getTime())) {
+				return '\u2014';
+			}
+			return date.toISOString();
+		} catch (_) {
+			return '\u2014';
+		}
 	}
 
-	if (typeof durationMs !== 'number' || !Number.isFinite(durationMs)) {
-		return '\u2014';
+	/**
+	 * Форматирует длительность в ms.
+	 *
+	 * @param {number|null} durationMs - Длительность в миллисекундах
+	 * @returns {string} Отформатированное значение или прочерк
+	 * @private
+	 */
+	_formatDuration(durationMs) {
+		if (durationMs === null || durationMs === undefined) {
+			return '\u2014';
+		}
+
+		if (typeof durationMs !== 'number' || !Number.isFinite(durationMs)) {
+			return '\u2014';
+		}
+
+		if (durationMs < 1) {
+			return durationMs.toFixed(2) + ' ms';
+		}
+		if (durationMs < 1000) {
+			return durationMs.toFixed(1) + ' ms';
+		}
+		return (durationMs / 1000).toFixed(2) + ' s';
 	}
 
-	if (durationMs < 1) {
-		return durationMs.toFixed(2) + ' ms';
+	/**
+	 * Скрывает панель.
+	 */
+	hide() {
+		if (this._element) {
+			this._element.classList.add(CSS.PANEL_HIDDEN);
+		}
 	}
-	if (durationMs < 1000) {
-		return durationMs.toFixed(1) + ' ms';
-	}
-	return (durationMs / 1000).toFixed(2) + ' s';
-};
 
-/**
- * Скрывает панель.
- */
-DetailPanel.prototype.hide = function () {
-	if (this._element) {
-		this._element.classList.add(CSS.PANEL_HIDDEN);
+	/**
+	 * Очищает содержимое панели.
+	 */
+	clear() {
+		if (this._contentEl) {
+			this._contentEl.textContent = '';
+		}
+		this.hide();
 	}
-};
+}
 
-/**
- * Очищает содержимое панели.
- */
-DetailPanel.prototype.clear = function () {
-	if (this._contentEl) {
-		this._contentEl.textContent = '';
-	}
-	this.hide();
-};
+export { DetailPanel };

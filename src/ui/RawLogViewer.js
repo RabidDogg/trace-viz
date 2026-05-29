@@ -248,64 +248,73 @@ function exportAsJson(records) {
 /**
  * RawLogViewer — отображает таблицу некатегоризированных записей.
  *
- * @param {NormalizedRecord[]} records - Массив записей без TraceId
- * @param {HTMLElement} container - DOM-элемент, в который будет вставлена таблица
- *
  * @example
  * const viewer = new RawLogViewer(uncategorizedRecords, document.getElementById('raw-logs'));
  */
-export function RawLogViewer(records, container) {
-	if (!container) {
-		return;
-	}
-
-	// Очищаем контейнер
-	while (container.firstChild) {
-		container.removeChild(container.firstChild);
-	}
-
-	// Контейнер компонента
-	const viewerEl = document.createElement('div');
-	viewerEl.className = CSS.CONTAINER;
-
-	// Кнопка экспорта
-	const exportBtn = createExportButton(records);
-	viewerEl.appendChild(exportBtn);
-
-	// Таблица
-	const table = document.createElement('table');
-	table.className = CSS.TABLE;
-
-	// Заголовок
-	const thead = document.createElement('thead');
-	const headerRow = document.createElement('tr');
-	headerRow.className = CSS.HEADER;
-
-	const headers = ['Timestamp', 'StageName', 'Message', 'Duration', 'Error'];
-
-	for (let i = 0; i < headers.length; i++) {
-		const th = document.createElement('th');
-		th.className = CSS.HEADER_CELL;
-		th.textContent = headers[i];
-		headerRow.appendChild(th);
-	}
-
-	thead.appendChild(headerRow);
-	table.appendChild(thead);
-
-	// Тело таблицы
-	const tbody = document.createElement('tbody');
-
-	if (!Array.isArray(records) || records.length === 0) {
-		tbody.appendChild(createEmptyRow());
-	} else {
-		for (let i = 0; i < records.length; i++) {
-			const row = createRow(records[i]);
-			tbody.appendChild(row);
+export class RawLogViewer {
+	/**
+	 * @param {NormalizedRecord[]} records - Массив записей без TraceId
+	 * @param {HTMLElement} container - DOM-элемент, в который будет вставлена таблица
+	 */
+	constructor(records, container) {
+		if (!container) {
+			return;
 		}
-	}
 
-	table.appendChild(tbody);
-	viewerEl.appendChild(table);
-	container.appendChild(viewerEl);
+		// Очищаем контейнер
+		while (container.firstChild) {
+			container.removeChild(container.firstChild);
+		}
+
+		// Контейнер компонента
+		const viewerEl = document.createElement('div');
+		viewerEl.className = CSS.CONTAINER;
+
+		// Кнопка экспорта
+		const exportBtn = createExportButton(records);
+		viewerEl.appendChild(exportBtn);
+
+		// Таблица
+		const table = document.createElement('table');
+		table.className = CSS.TABLE;
+
+		// Заголовок
+		const thead = document.createElement('thead');
+		const headerRow = document.createElement('tr');
+		headerRow.className = CSS.HEADER;
+
+		const headers = [
+			'Timestamp',
+			'StageName',
+			'Message',
+			'Duration',
+			'Error',
+		];
+
+		for (let i = 0; i < headers.length; i++) {
+			const th = document.createElement('th');
+			th.className = CSS.HEADER_CELL;
+			th.textContent = headers[i];
+			headerRow.appendChild(th);
+		}
+
+		thead.appendChild(headerRow);
+		table.appendChild(thead);
+
+		// Тело таблицы
+		const tbody = document.createElement('tbody');
+
+		if (!Array.isArray(records) || records.length === 0) {
+			tbody.appendChild(createEmptyRow());
+		} else {
+			for (let i = 0; i < records.length; i++) {
+				const row = createRow(records[i]);
+				tbody.appendChild(row);
+			}
+		}
+
+		table.appendChild(tbody);
+		viewerEl.appendChild(table);
+		container.appendChild(viewerEl);
+	}
 }
