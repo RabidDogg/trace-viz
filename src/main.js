@@ -21,13 +21,16 @@ import { RawLogViewer } from './ui/RawLogViewer.js';
  * @returns {Object} распарсенные данные с полями sources (нормализованные записи) и raw (исходные)
  */
 function parseData(data) {
-	Logger.info('parseData: запуск пайплайна парсинга');
+	Logger.info('Main', 'parseData: запуск пайплайна парсинга');
 
 	const sources = extractSources(data);
-	Logger.info(`parseData: извлечено ${sources.length} источников`);
+	Logger.info('Main', `parseData: извлечено ${sources.length} источников`);
 
 	const normalized = normalizeRecords(sources);
-	Logger.info(`parseData: нормализовано ${normalized.length} записей`);
+	Logger.info(
+		'Main',
+		`parseData: нормализовано ${normalized.length} записей`,
+	);
 
 	// Сохраняем в window.__APP_DATA__ для отладки
 	if (typeof window !== 'undefined') {
@@ -46,7 +49,10 @@ function parseData(data) {
 		}
 	}
 	if (errorCount > 0) {
-		Logger.warn(`parseData: обнаружено ${errorCount} записей с ошибками`);
+		Logger.warn(
+			'Main',
+			`parseData: обнаружено ${errorCount} записей с ошибками`,
+		);
 	}
 
 	return {
@@ -67,12 +73,12 @@ function parseData(data) {
  *   - raw: Object
  */
 function processData(parsedData) {
-	Logger.info('processData: запуск группировки и классификации');
+	Logger.info('Main', 'processData: запуск группировки и классификации');
 
 	const normalized = parsedData.normalized;
 
 	if (!Array.isArray(normalized) || normalized.length === 0) {
-		Logger.warn('processData: нет записей для обработки');
+		Logger.warn('Main', 'processData: нет записей для обработки');
 		return {
 			classifiedTraces: [],
 			uncategorized: [],
@@ -83,6 +89,7 @@ function processData(parsedData) {
 	// 1. Группировка по TraceId
 	const { traces, uncategorized } = groupByTraceId(normalized);
 	Logger.info(
+		'Main',
 		'processData: сгруппировано ' +
 			String(traces.size) +
 			' трейсов, ' +
@@ -98,6 +105,7 @@ function processData(parsedData) {
 		const classified = classifyTrace(traceId, records);
 		classifiedTraces.push(classified);
 		Logger.debug(
+			'Main',
 			'processData: трейс ' +
 				traceId +
 				' классифицирован как ' +
@@ -116,6 +124,7 @@ function processData(parsedData) {
 	}
 
 	Logger.info(
+		'Main',
 		'processData: классифицировано ' +
 			String(classifiedTraces.length) +
 			' трейсов',
@@ -136,19 +145,23 @@ function processData(parsedData) {
  * @param {NormalizedRecord[]} processedData.uncategorized
  */
 function renderData(processedData) {
-	Logger.info('renderData: запуск рендеринга');
+	Logger.info('Main', 'renderData: запуск рендеринга');
 
 	// Инициализация RawLogViewer для UNCATEGORIZED записей
 	const rawLogContainer = document.getElementById('raw-log-container');
 	if (rawLogContainer) {
 		RawLogViewer(processedData.uncategorized, rawLogContainer);
 		Logger.info(
+			'Main',
 			'renderData: RawLogViewer отображает ' +
 				String(processedData.uncategorized.length) +
 				' некатегоризированных записей',
 		);
 	} else {
-		Logger.warn('renderData: элемент #raw-log-container не найден в DOM');
+		Logger.warn(
+			'Main',
+			'renderData: элемент #raw-log-container не найден в DOM',
+		);
 	}
 }
 
@@ -158,17 +171,17 @@ function renderData(processedData) {
  * @param {Object} data
  */
 function onDataLoaded(data) {
-	Logger.info('Данные загружены, запуск пайплайна обработки');
-	Logger.debug('Сырые данные:', data);
+	Logger.info('Main', 'Данные загружены, запуск пайплайна обработки');
+	Logger.debug('Main', 'Сырые данные:', data);
 
 	try {
 		const parsed = parseData(data);
 		const processed = processData(parsed);
 		renderData(processed);
-		Logger.info('Пайплайн обработки завершён');
+		Logger.info('Main', 'Пайплайн обработки завершён');
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
-		Logger.error(`Ошибка в пайплайне обработки: ${msg}`);
+		Logger.error('Main', `Ошибка в пайплайне обработки: ${msg}`);
 	}
 }
 
@@ -177,7 +190,7 @@ function onDataLoaded(data) {
  * @param {string} message
  */
 function onError(message) {
-	Logger.error(`Ошибка загрузки: ${message}`);
+	Logger.error('Main', `Ошибка загрузки: ${message}`);
 }
 
 /**
@@ -185,7 +198,7 @@ function onError(message) {
  * Вызывается после загрузки DOM.
  */
 function initApp() {
-	Logger.info('Trace Viz инициализация...');
+	Logger.info('Main', 'Trace Viz инициализация...');
 
 	const dropZone = document.getElementById('upload-zone');
 	const fileInput = document.getElementById('file-input');
@@ -195,6 +208,7 @@ function initApp() {
 
 	if (!dropZone || !fileInput || !statusEl) {
 		Logger.error(
+			'Main',
 			'Критические DOM-элементы не найдены. Инициализация прервана.',
 		);
 		return;
@@ -219,12 +233,12 @@ function initApp() {
 			placeholder.className = 'log-table__placeholder';
 			placeholder.textContent = 'Логи будут отображаться здесь';
 			logContainer.appendChild(placeholder);
-			Logger.info('Журнал событий очищен');
+			Logger.info('Main', 'Журнал событий очищен');
 		});
 	}
 
-	Logger.info('Trace Viz инициализирован успешно');
-	Logger.info('Ожидание загрузки файла...');
+	Logger.info('Main', 'Trace Viz инициализирован успешно');
+	Logger.info('Main', 'Ожидание загрузки файла...');
 }
 
 // Запуск приложения после полной загрузки DOM
