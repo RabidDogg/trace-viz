@@ -45,4 +45,4 @@ trace-viz/
 
 ## Лицензия
 
-Unlicense — общественное достояние. Подробнее: [LICENSE](LICENSE).
+MIT. Подробнее: [LICENSE](LICENSE).
