@@ -48,7 +48,7 @@ class FileReader {
 		this.#callbacks = callbacks;
 
 		this.#bindEvents();
-		Logger.info('FileReader инициализирован');
+		Logger.info('FileReader', 'FileReader инициализирован');
 	}
 
 	/**
@@ -88,7 +88,7 @@ class FileReader {
 		this.#callbacks = null;
 		this.#isDestroyed = true;
 
-		Logger.debug('FileReader уничтожен');
+		Logger.debug('FileReader', 'FileReader уничтожен');
 	}
 
 	/**
@@ -152,6 +152,7 @@ class FileReader {
 		}
 
 		Logger.info(
+			'FileReader',
 			`Загрузка файла: ${file.name} (${Logger.time('readFile', () => file.size)} байт)`,
 		);
 
@@ -209,6 +210,7 @@ class FileReader {
 		// Если загружен плоский массив — оборачиваем в структуру hits
 		if (Array.isArray(parsed)) {
 			Logger.info(
+				'FileReader',
 				`Обнаружен плоский массив (${parsed.length} записей). Оборачиваю в структуру hits.`,
 			);
 			return {
@@ -228,6 +230,7 @@ class FileReader {
 			Array.isArray(parsed.hits.hits)
 		) {
 			Logger.info(
+				'FileReader',
 				`Загружена структура hits (${parsed.hits.hits.length} записей).`,
 			);
 			return parsed;
@@ -236,6 +239,7 @@ class FileReader {
 		// Если объект, но не массив и не hits — оборачиваем как единственный _source
 		if (parsed && typeof parsed === 'object') {
 			Logger.info(
+				'FileReader',
 				'Загружен одиночный объект. Оборачиваю в структуру hits.',
 			);
 			return {
@@ -256,7 +260,7 @@ class FileReader {
 	 * @private
 	 */
 	#showError(message) {
-		Logger.error(message);
+		Logger.error('FileReader', message);
 		this.#setStatus(message, 'error');
 		this.#showModal(message);
 	}
@@ -320,7 +324,10 @@ class FileReader {
 	#recover() {
 		this.#setStatus('');
 		this.#fileInput.value = '';
-		Logger.info('FileReader восстановлен в состояние ожидания файла');
+		Logger.info(
+			'FileReader',
+			'FileReader восстановлен в состояние ожидания файла',
+		);
 	}
 }
 

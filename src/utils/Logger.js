@@ -2,11 +2,14 @@
  * @fileoverview
  * Система логирования приложения Trace Viz.
  * Поддерживает уровни DEBUG, INFO, WARN, ERROR.
- * Глобальный флаг window.APP_DEBUG включает вывод DEBUG-сообщений.
+ * Флаг отладки APP_DEBUG импортируется из src/config/app.js.
+ * Формат вывода: [LEVEL] [Module] Сообщение
  * Перехватывает window.onerror и unhandledrejection.
  */
 
 'use strict';
+
+import { APP_DEBUG } from '../config/app.js';
 
 /** @enum {string} */
 const LOG_LEVELS = Object.freeze({
@@ -40,6 +43,7 @@ function formatTimestamp() {
 /**
  * @class Logger
  * Статический класс для структурированного логирования.
+ * Формат вывода: [LEVEL] [Module] Сообщение
  */
 class Logger {
 	/** @type {number} */
@@ -47,40 +51,44 @@ class Logger {
 
 	/**
 	 * Выводит сообщение уровня DEBUG.
-	 * Отображается только если window.APP_DEBUG === true.
+	 * Отображается только если APP_DEBUG === true.
+	 * @param {string} moduleName - Имя модуля-источника лога
 	 * @param {string} message
 	 * @param {...*} args
 	 */
-	static debug(message, ...args) {
-		if (!window.APP_DEBUG) return;
-		Logger.#write(LOG_LEVELS.DEBUG, message, ...args);
+	static debug(moduleName, message, ...args) {
+		if (!APP_DEBUG) return;
+		Logger.#write(LOG_LEVELS.DEBUG, moduleName, message, ...args);
 	}
 
 	/**
 	 * Выводит сообщение уровня INFO.
+	 * @param {string} moduleName - Имя модуля-источника лога
 	 * @param {string} message
 	 * @param {...*} args
 	 */
-	static info(message, ...args) {
-		Logger.#write(LOG_LEVELS.INFO, message, ...args);
+	static info(moduleName, message, ...args) {
+		Logger.#write(LOG_LEVELS.INFO, moduleName, message, ...args);
 	}
 
 	/**
 	 * Выводит сообщение уровня WARN.
+	 * @param {string} moduleName - Имя модуля-источника лога
 	 * @param {string} message
 	 * @param {...*} args
 	 */
-	static warn(message, ...args) {
-		Logger.#write(LOG_LEVELS.WARN, message, ...args);
+	static warn(moduleName, message, ...args) {
+		Logger.#write(LOG_LEVELS.WARN, moduleName, message, ...args);
 	}
 
 	/**
 	 * Выводит сообщение уровня ERROR.
+	 * @param {string} moduleName - Имя модуля-источника лога
 	 * @param {string} message
 	 * @param {...*} args
 	 */
-	static error(message, ...args) {
-		Logger.#write(LOG_LEVELS.ERROR, message, ...args);
+	static error(moduleName, message, ...args) {
+		Logger.#write(LOG_LEVELS.ERROR, moduleName, message, ...args);
 	}
 
 	/**
@@ -98,14 +106,16 @@ class Logger {
 
 	/**
 	 * Внутренний метод записи лога.
+	 * Формат: [LEVEL] [ModuleName] Сообщение
 	 * @param {string} level
+	 * @param {string} moduleName
 	 * @param {string} message
 	 * @param {...*} args
 	 * @private
 	 */
-	static #write(level, message, ...args) {
-		const timestamp = formatTimestamp();
-		const prefix = `[${level}] [${timestamp}]`;
+	static #write(level, moduleName, message, ...args) {
+		const timestamp = APP_DEBUG ? ` [${formatTimestamp()}]` : '';
+		const prefix = `[${level}] [${moduleName}]${timestamp}`;
 
 		switch (level) {
 			case LOG_LEVELS.DEBUG:
@@ -124,23 +134,23 @@ class Logger {
 				console.log(prefix, message, ...args);
 		}
 
-		Logger.#dispatchToUI(level, prefix, message);
+		Logger.#dispatchToUI(level, moduleName, message);
 	}
 
 	/**
 	 * Отправляет лог в UI-контейнер (если он существует).
 	 * @param {string} level
-	 * @param {string} prefix
+	 * @param {string} moduleName
 	 * @param {string} message
 	 * @private
 	 */
-	static #dispatchToUI(level, prefix, message) {
+	static #dispatchToUI(level, moduleName, message) {
 		const container = document.getElementById('log-container');
 		if (!container) return;
 
 		const entry = document.createElement('div');
 		entry.className = `log-entry log-entry--${level.toLowerCase()}`;
-		entry.textContent = `${prefix} ${message}`;
+		entry.textContent = `[${level}] [${moduleName}] ${message}`;
 		container.appendChild(entry);
 		container.scrollTop = container.scrollHeight;
 	}
@@ -159,6 +169,7 @@ class Logger {
 				error,
 			) => {
 				Logger.error(
+					'GlobalHandler',
 					`Uncaught error: ${msg} (${url}:${line}:${col})`,
 					error || '',
 				);
@@ -169,7 +180,11 @@ class Logger {
 			/** @param {PromiseRejectionEvent} event */ (event) => {
 				const reason = event.reason;
 				const message = reason?.message || String(reason);
-				Logger.error(`Unhandled Promise rejection: ${message}`, reason);
+				Logger.error(
+					'GlobalHandler',
+					`Unhandled Promise rejection: ${message}`,
+					reason,
+				);
 			},
 		);
 	}

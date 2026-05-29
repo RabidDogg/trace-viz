@@ -12,6 +12,8 @@
 
 'use strict';
 
+import { Logger } from '../utils/Logger.js';
+
 /**
  * @typedef {import('../parser/DataNormalizer.js').NormalizedRecord} NormalizedRecord
  */
@@ -239,7 +241,7 @@ function exportAsJson(records) {
 		}, 100);
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
-		console.error('RawLogViewer: ошибка экспорта JSON:', msg);
+		Logger.error('RawLogViewer', 'Ошибка экспорта JSON: ' + msg);
 	}
 }
 
