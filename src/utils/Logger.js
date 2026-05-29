@@ -173,6 +173,8 @@ class Logger {
 					`Uncaught error: ${msg} (${url}:${line}:${col})`,
 					error || '',
 				);
+				// НФТ 4.3: UI-баннер при глобальной ошибке
+				Logger.#showErrorBanner(msg);
 			};
 
 		window.addEventListener(
@@ -187,6 +189,51 @@ class Logger {
 				);
 			},
 		);
+	}
+
+	/**
+	 * Создаёт UI-баннер с сообщением об ошибке.
+	 * Баннер отображается в правом верхнем углу и автоматически скрывается через 8 секунд.
+	 *
+	 * @param {string} message - Текст ошибки
+	 * @private
+	 */
+	static #showErrorBanner(message) {
+		const container =
+			document.getElementById('error-banner-container') || document.body;
+
+		const banner = document.createElement('div');
+		banner.className = 'error-banner';
+		banner.style.cssText =
+			'position:fixed;top:16px;right:16px;z-index:10000;' +
+			'background:#E74C3C;color:#fff;padding:12px 20px;' +
+			'border-radius:6px;font-size:14px;font-family:sans-serif;' +
+			'box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
+			'max-width:400px;word-break:break-word;' +
+			'display:flex;align-items:center;gap:10px;' +
+			'animation:errorBannerFadeIn 0.3s ease-out;';
+
+		const icon = document.createElement('span');
+		icon.textContent = '\u26A0\uFE0F';
+		icon.style.fontSize = '18px';
+		banner.appendChild(icon);
+
+		const text = document.createElement('span');
+		text.textContent = message;
+		banner.appendChild(text);
+
+		container.appendChild(banner);
+
+		// Автоматическое скрытие через 8 секунд
+		setTimeout(() => {
+			banner.style.transition = 'opacity 0.5s ease-out';
+			banner.style.opacity = '0';
+			setTimeout(() => {
+				if (banner.parentNode) {
+					banner.parentNode.removeChild(banner);
+				}
+			}, 500);
+		}, 8000);
 	}
 }
 
