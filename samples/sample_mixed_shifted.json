@@ -1,0 +1,59 @@
+{
+	"hits": {
+		"total": { "value": 5 },
+		"hits": [
+			{
+				"_source": {
+					"TraceId": "trace-mixed-001",
+					"SpanId": "span-A",
+					"ParentId": null,
+					"ElapsedMilliseconds": 200.0,
+					"timestamp": "2026-05-30T12:00:00.000Z",
+					"ActionName": "Service.Orchestrator.Begin",
+					"LogLevel": "Information"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-mixed-001",
+					"SpanId": "span-B",
+					"ParentId": "span-A",
+					"ElapsedMilliseconds": 100.0,
+					"timestamp": "2026-05-30T12:00:00.010Z",
+					"ActionName": "Service.Worker.Process",
+					"LogLevel": "Information"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-mixed-001",
+					"ElapsedMilliseconds": 15.5,
+					"timestamp": "2026-05-30T12:00:00.050Z",
+					"LogLevel": "Warning",
+					"Message": "Retry attempt 1 for connection timeout",
+					"Exception": "System.TimeoutException: Connection timed out after 5000ms"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-mixed-001",
+					"SpanId": "span-C",
+					"ParentId": "span-B",
+					"ElapsedMilliseconds": 50.0,
+					"timestamp": "2026-05-30T12:00:00.080Z",
+					"ActionName": "Service.Worker.Finalize",
+					"LogLevel": "Information"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-mixed-001",
+					"ElapsedMilliseconds": 5.0,
+					"timestamp": "2026-05-30T12:00:00.150Z",
+					"Category": "AuditLogger",
+					"Message": "Operation logged successfully"
+				}
+			}
+		]
+	}
+}

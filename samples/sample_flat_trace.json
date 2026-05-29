@@ -1,0 +1,35 @@
+{
+	"hits": {
+		"total": { "value": 3 },
+		"hits": [
+			{
+				"_source": {
+					"TraceId": "trace-flat-001",
+					"ElapsedMilliseconds": null,
+					"elapsed": "1,200 ms",
+					"timestamp": "2026-05-30T11:00:00.000Z",
+					"Category": "System.Net.Http.HttpClient",
+					"Message": "Sending HTTP request"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-flat-001",
+					"ElapsedMilliseconds": 850.5,
+					"timestamp": "2026-05-30T11:00:01.200Z",
+					"IntegrationName": "ExternalApi",
+					"Message": "Received response from external service"
+				}
+			},
+			{
+				"_source": {
+					"TraceId": "trace-flat-001",
+					"elapsed": "00:00:00.050",
+					"timestamp": "2026-05-30T11:00:02.050Z",
+					"ActionName": "Processing.Complete",
+					"Message": "Finalizing request"
+				}
+			}
+		]
+	}
+}
