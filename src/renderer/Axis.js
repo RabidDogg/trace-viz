@@ -161,6 +161,4 @@ TimelineAxis.prototype.clear = function () {
 };
 
 // Экспорт
-module.exports = {
-	TimelineAxis: TimelineAxis,
-};
+export { TimelineAxis };

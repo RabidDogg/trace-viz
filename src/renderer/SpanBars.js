@@ -789,6 +789,4 @@ function findBarGroup(target) {
 }
 
 // Экспорт
-module.exports = {
-	SpanBarsRenderer: SpanBarsRenderer,
-};
+export { SpanBarsRenderer };
