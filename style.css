@@ -12,6 +12,8 @@
   --color-warning: #f59e0b;
   --color-info: #3b82f6;
   --color-success: #10b981;
+  --color-clipboard: #10b981;
+  --color-clipboard-hover: #059669;
   --border-color: #e5e7eb;
   --shadow-color: rgba(92, 169, 133, 0.36);
   --font-family: 'Segoe UI', system-ui, sans-serif;
@@ -942,4 +944,26 @@ body {
 .raw-log-table__export-btn:hover {
   background-color: var(--color-info);
   color: #ffffff;
+}
+
+/* ==========================================================================
+   Кнопка загрузки из буфера обмена
+   ========================================================================== */
+.upload-zone__button--clipboard {
+  background: var(--color-clipboard, #10b981);
+}
+
+.upload-zone__button--clipboard:hover:not(:disabled) {
+  background: var(--color-clipboard-hover, #059669);
+}
+
+.upload-zone__button--clipboard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Состояние загрузки */
+.upload-zone__button--loading {
+  pointer-events: none;
+  opacity: 0.7;
 }
