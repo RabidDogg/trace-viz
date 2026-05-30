@@ -25,6 +25,49 @@ python -m http.server 8080
 npx serve .
 ```
 
+## npm-скрипты
+
+Проект использует `package.json` только для скриптов управления (без зависимостей).
+
+| Команда                                  | Описание                                                     |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| `npm start` / `npm run dev`              | Запуск сервера на `http://localhost:5555`                    |
+| `npm run build`                          | Сборка дистрибутива: архивирование последнего тэга в `dist/` |
+| `npm run commit:feat -- "сообщение"`     | Коммит с префиксом `feat:`                                   |
+| `npm run commit:fix -- "сообщение"`      | Коммит с префиксом `fix:`                                    |
+| `npm run commit:refactor -- "сообщение"` | Коммит с префиксом `refactor:`                               |
+| `npm run commit:style -- "сообщение"`    | Коммит с префиксом `style:`                                  |
+| `npm run commit:docs -- "сообщение"`     | Коммит с префиксом `docs:`                                   |
+| `npm run commit:release -- "сообщение"`  | Коммит с префиксом `release:`                                |
+| `npm run merge:dev -- "branch-name"`     | Переключиться на develop и влить ветку                       |
+| `npm run merge:master`                   | Влить последний тэг в master                                 |
+| `npm run tag`                            | Создать annotated-тэг из версии package.json                 |
+| `npm run push:all`                       | Запушить всё в оба remote (origin + sourcecraft)             |
+
+**Примеры использования:**
+
+```bash
+# Запуск сервера
+npm start
+
+# Сборка дистрибутива
+npm run build
+
+# Коммит с префиксом feat
+npm run commit:feat -- "моё описание"
+# эквивалентно: git commit -m "feat: моё описание"
+
+# Merge ветки в develop
+npm run merge:dev -- "feature/my-branch"
+# эквивалентно: git checkout develop && git merge feature/my-branch
+
+# Релизный тэг
+npm run tag
+
+# Публикация во все remote
+npm run push:all
+```
+
 ## Структура проекта
 
 ```
