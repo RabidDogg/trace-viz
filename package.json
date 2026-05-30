@@ -4,10 +4,10 @@
 	"description": "Визуализатор distributed trace-логов. Загрузка через файл или буфер обмена → парсинг → нормализация → иерархия → рендеринг. OpenTelemetry / Elasticsearch / OpenSearch форматы",
 	"private": true,
 	"scripts": {
-		"start": "python -m http.server 5555",
-		"dev": "python -m http.server 5555",
+		"start": "python3 -m http.server 5555 || python -m http.server 5555",
+		"dev": "npm run start",
 		"build": "npm run build:zip",
-		"build:zip": "node -e \"const { execSync } = require('child_process'); const tag = execSync('git describe --tags --abbrev=0').toString().trim(); const out = `dist/trace-viz-${tag}.zip`; execSync(`mkdir dist 2>nul & tar -a -cf ${out} index.html style.css LICENSE README.md docs samples src`, { shell: true }); console.log('✅ Сборка:', out);\"",
+		"build:zip": "mkdir -p dist && git archive --format=zip --output=dist/trace-viz-$(git describe --tags --abbrev=0).zip HEAD",
 		"commit:feat": "node -e \"const msg = process.argv.slice(1).join('\\n'); require('child_process').execSync('git commit -m \\\"feat: ' + msg + '\\\"', { stdio: 'inherit', shell: true });\" --",
 		"commit:fix": "node -e \"const msg = process.argv.slice(1).join('\\n'); require('child_process').execSync('git commit -m \\\"fix: ' + msg + '\\\"', { stdio: 'inherit', shell: true });\" --",
 		"commit:refactor": "node -e \"const msg = process.argv.slice(1).join('\\n'); require('child_process').execSync('git commit -m \\\"refactor: ' + msg + '\\\"', { stdio: 'inherit', shell: true });\" --",
@@ -17,6 +17,9 @@
 		"merge:dev": "git checkout develop && git merge",
 		"merge:master": "node -e \"const { execSync } = require('child_process'); const tag = execSync('git describe --tags --abbrev=0').toString().trim(); execSync('git checkout master && git merge ' + tag + ' -m \\\"merge: тэг ' + tag + ' в master\\\"', { stdio: 'inherit', shell: true });\"",
 		"tag": "node -e \"const v = require('./package.json').version; const { execSync } = require('child_process'); execSync('git tag -a v' + v + ' -m \\\"release: v' + v + '\\\"', { stdio: 'inherit' }); console.log('✅ Тэг v' + v);\"",
-		"push:all": "git push origin master && git push origin develop && git push origin --tags && git push sourcecraft master && git push sourcecraft develop && git push sourcecraft --tags"
+		"push:all": "git push origin master && git push origin develop && git push origin --tags && git push sourcecraft master && git push sourcecraft develop && git push sourcecraft --tags || echo '⚠️ Проверьте наличие remote: sourcecraft'"
+	},
+	"engines": {
+		"node": ">=18.0.0"
 	}
 }
