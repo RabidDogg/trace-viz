@@ -11,10 +11,11 @@ TraceViz — одностраничное приложение (SPA) для ви
 Load → Parse → Normalize → Group → Classify → Build Hierarchy → Layout → Render
 ```
 
-### 1. Load (`src/io/FileLoader.js`)
+### 1. Load (`src/io/FileLoader.js`, `src/io/ClipboardReader.js`, `src/io/DataLoader.js`)
 
-- Drag&Drop или file input
-- FileLoader API (readAsText)
+- Drag&Drop или file input (FileLoader)
+- Чтение из буфера обмена через Clipboard API (ClipboardReader)
+- Унифицированный слой DataLoader для обработки данных из любого источника
 - Валидация JSON
 - Обёртка плоского массива в Elasticsearch-структуру
 
@@ -64,7 +65,7 @@ Load → Parse → Normalize → Group → Classify → Build Hierarchy → Layo
 ```
 src/
 ├── config/          # Конфигурация (field-mapping, app)
-├── io/              # Ввод/вывод (FileLoader)
+├── io/              # Ввод/вывод (FileLoader, ClipboardReader, DataLoader)
 ├── parser/          # Парсинг и нормализация
 ├── processor/       # Обработка и классификация
 ├── renderer/        # SVG-рендеринг
@@ -94,6 +95,31 @@ Orphan-записи (без SpanId) встраиваются в спан, чей
 Ошибка на любом этапе не прерывает работу всего приложения.
 При битом JSON — модальное окно с указанием строки ошибки.
 При критической ошибке — возврат в состояние "Загрузка файла".
+
+## Clipboard Data Ingestion (Epic 7)
+
+### Чтение из буфера обмена
+
+Реализовано через `ClipboardReader` — класс-обёртку над `navigator.clipboard.readText()`.
+
+**Ограничения:**
+
+- Работает только в secure context (HTTPS или localhost)
+- Требует пользовательского жеста (click)
+- Не поддерживается в file:// протоколе
+
+**Поток данных:**
+
+```
+ClipboardReader.read() → строка JSON → DataLoader.load() → OpenSourceExtractor → Пайплайн
+```
+
+**Валидация:**
+
+1. Проверка поддержки API → isSupported()
+2. Проверка на пустую строку
+3. JSON.parse()
+4. Проверка структуры (hits.hits или массив)
 
 ## Ограничения
 

@@ -1,8 +1,7 @@
 # TraceViz
 
-> **BUDGET:** 0 часов (pet-project, энтузиазм)
-
-Визуализатор distributed trace-логов (OpenTelemetry/Elastic APM формат).
+> Визуализатор distributed trace-логов (OpenTelemetry / Elasticsearch/OpenSearch формат).
+> Загрузка через файл или буфер обмена — полный цикл: парсинг → нормализация → иерархия → рендеринг.
 
 ## Описание
 
@@ -33,7 +32,7 @@ trace-viz/
 ├── style.css           # Глобальные стили
 ├── src/
 │   ├── config/         # Конфигурация fallback chain
-│   ├── io/             # Ввод/вывод (загрузка файлов)
+│   ├── io/             # Ввод/вывод (FileLoader, ClipboardReader, DataLoader)
 │   ├── parser/         # Парсинг и нормализация данных
 │   ├── processor/      # Обработка и классификация
 │   ├── renderer/       # SVG-рендеринг
@@ -42,6 +41,17 @@ trace-viz/
 ├── samples/            # Тестовые JSON-файлы
 └── docs/               # Документация
 ```
+
+## Загрузка из буфера обмена
+
+1. Скопируйте JSON-ответ из OpenSearch (или другого источника) в буфер обмена
+2. Нажмите кнопку **«📋 Загрузить из буфера обмена»** в интерфейсе
+3. Данные пройдут тот же пайплайн парсинга и визуализации, что и при загрузке файла
+
+**Требования к браузеру:**
+
+- HTTPS или http://localhost (secure context)
+- Chrome 90+, Firefox 90+, Edge 90+, Safari 14+
 
 ## Лицензия
 
