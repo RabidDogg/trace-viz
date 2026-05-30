@@ -628,16 +628,16 @@ function initApp() {
 			const result = await DataLoader.load(rawText, 'clipboard');
 
 			statusBanner.setStatus(
-				'✅ Данные успешно загружены из буфера обмена',
+				'Данные успешно загружены из буфера обмена',
 				'success',
 			);
-			clipboardBtn.style.display = 'none';
 
 			// Тот же пайплайн обработки, что и для файла
 			onDataLoaded(result.raw);
 		} catch (err) {
 			Logger.error('ClipboardReader', err.message);
-			statusBanner.setStatus(`❌ ${err.message}`, 'error');
+			statusBanner.setStatus(err.message, 'error');
+		} finally {
 			clipboardBtn.disabled = false;
 			clipboardBtn.classList.remove('upload-zone__button--loading');
 			clipboardBtn.textContent = '📋 Загрузить из буфера обмена';
