@@ -80,11 +80,6 @@ body {
   gap: 8px;
 }
 
-.upload-zone__icon {
-  font-size: 48px;
-  line-height: 1;
-}
-
 .upload-zone__text {
   font-size: 18px;
   font-weight: 500;
