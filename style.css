@@ -8,6 +8,7 @@
   --bg-secondary: #f5f7fa;
   --text-primary: #1a1a2e;
   --text-secondary: #6b7280;
+  --text-input: #ffffff;
   --color-error: #ef4444;
   --color-warning: #f59e0b;
   --color-info: #3b82f6;
@@ -115,8 +116,9 @@ body {
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-input);
   background-color: var(--color-info);
+  border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -299,7 +301,7 @@ body {
   font-family: var(--font-family);
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-input);
   background-color: var(--color-info);
   border: none;
   border-radius: 6px;
@@ -362,7 +364,7 @@ body {
 .span-bar__label {
   font-family: var(--font-family);
   font-size: 11px;
-  fill: #ffffff;
+  fill: var(--text-input);
   pointer-events: none;
   user-select: none;
   dominant-baseline: central;
@@ -370,7 +372,7 @@ body {
 
 .span-bar__error-icon {
   font-family: var(--font-family);
-  fill: #ffffff;
+  fill: var(--text-input);
   pointer-events: none;
   user-select: none;
   dominant-baseline: central;
@@ -385,7 +387,7 @@ body {
 }
 
 .span-bar--highlighted {
-  stroke: #ffffff;
+  stroke: var(--text-input);
   stroke-width: 2;
   filter: brightness(1.2);
 }
@@ -414,7 +416,7 @@ body {
 .span-bar__tooltip-title {
   font-size: 13px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-input);
   margin-bottom: 6px;
   padding-bottom: 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -943,7 +945,7 @@ body {
 
 .raw-log-table__export-btn:hover {
   background-color: var(--color-info);
-  color: #ffffff;
+  color: var(--text-input);
 }
 
 /* ==========================================================================
