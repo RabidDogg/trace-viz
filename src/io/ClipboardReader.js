@@ -37,12 +37,11 @@ export class ClipboardReader {
 	}
 
 	/**
-	 * Асинхронно читает и парсит JSON из буфера обмена.
-	 * @returns {Promise<Object>} Распарсенный JSON-объект
+	 * Асинхронно читает сырой текст из буфера обмена.
+	 * Парсинг JSON и валидация структуры выполняются в DataLoader.
+	 * @returns {Promise<string>} Сырой JSON-текст из буфера обмена
 	 * @throws {Error} С описанием проблемы:
 	 *   - "Буфер обмена пуст"
-	 *   - "Невалидный формат данных в буфере"
-	 *   - "Формат данных не соответствует OpenSearch JSON"
 	 *   - "Доступ к буферу обмена запрещён"
 	 *   - "Clipboard API не поддерживается"
 	 */
@@ -73,23 +72,7 @@ export class ClipboardReader {
 			throw new Error('Буфер обмена пуст');
 		}
 
-		let parsed;
-		try {
-			parsed = JSON.parse(text);
-		} catch (err) {
-			Logger.error('DataLoader', 'Failed to parse JSON from clipboard.');
-			throw new Error('Невалидный формат данных в буфере');
-		}
-
-		if (!ClipboardReader.validateStructure(parsed)) {
-			Logger.error(
-				'ClipboardReader',
-				'Data structure does not match OpenSearch JSON format.',
-			);
-			throw new Error('Формат данных не соответствует OpenSearch JSON');
-		}
-
-		return parsed;
+		return text;
 	}
 
 	/**

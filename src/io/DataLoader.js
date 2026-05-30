@@ -2,7 +2,7 @@
  * @fileoverview
  * DataLoader — унифицированный слой загрузки данных.
  * Принимает сырой JSON-текст из любого источника (файл, буфер обмена),
- * парсит его и передаёт в OpenSourceExtractor для извлечения записей.
+ * парсит его, валидирует структуру и передаёт в OpenSourceExtractor для извлечения записей.
  *
  * Позволяет исключить дублирование логики парсинга между FileLoader и ClipboardReader.
  */
@@ -10,6 +10,7 @@
 'use strict';
 
 import { OpenSourceExtractor } from '../parser/OpenSourceExtractor.js';
+import { ClipboardReader } from './ClipboardReader.js';
 import { Logger } from '../utils/Logger.js';
 
 /**
@@ -36,7 +37,7 @@ export class DataLoader {
 	 * @param {string} rawText - Сырой JSON-текст
 	 * @param {string} [source='unknown'] - Источник данных (file/clipboard)
 	 * @returns {Promise<Object>} Результат: { records: Array, raw: Object }
-	 * @throws {Error} При невалидном JSON
+	 * @throws {Error} При невалидном JSON или неверной структуре данных
 	 */
 	static async load(rawText, source = 'unknown') {
 		Logger.info('DataLoader', `Loading data from source: ${source}`);
@@ -51,6 +52,15 @@ export class DataLoader {
 				`Failed to parse JSON from ${source}: ${e.message}`,
 			);
 			throw new Error(`Невалидный JSON: ${e.message}`);
+		}
+
+		// Валидация структуры данных
+		if (!ClipboardReader.validateStructure(parsed)) {
+			Logger.error(
+				'DataLoader',
+				`Data structure from ${source} does not match OpenSearch JSON format.`,
+			);
+			throw new Error('Формат данных не соответствует OpenSearch JSON');
 		}
 
 		// Извлечение записей через OpenSourceExtractor
