@@ -122,7 +122,7 @@ class Logger {
 				console.debug(prefix, message, ...args);
 				break;
 			case LOG_LEVELS.INFO:
-				console.info(prefix, message, ...args);
+				console.info('%s %s %o', prefix, message, ...args);
 				break;
 			case LOG_LEVELS.WARN:
 				console.warn(prefix, message, ...args);
