@@ -24,6 +24,8 @@
 
 import { Logger } from './utils/Logger.js';
 import { FileLoader } from './io/FileLoader.js';
+import { ClipboardReader } from './io/ClipboardReader.js';
+import { DataLoader } from './io/DataLoader.js';
 import { OpenSourceExtractor } from './parser/OpenSourceExtractor.js';
 import { DataNormalizer } from './parser/DataNormalizer.js';
 import { TraceGrouper } from './processor/TraceGrouper.js';
@@ -598,6 +600,48 @@ function initApp() {
 	const fileLoader = new FileLoader(dropZone, fileInput, statusEl, {
 		onDataLoaded: onDataLoaded,
 		onError: onError,
+	});
+
+	// Инициализация ClipboardReader
+	const clipboardBtn = document.getElementById('clipboard-btn');
+	if (ClipboardReader.isSupported()) {
+		clipboardBtn.disabled = false;
+		Logger.info(
+			'ClipboardReader',
+			'Clipboard API is supported, button enabled.',
+		);
+	} else {
+		Logger.warn(
+			'ClipboardReader',
+			'Clipboard API not supported, button remains disabled.',
+		);
+	}
+
+	clipboardBtn.addEventListener('click', async () => {
+		clipboardBtn.disabled = true;
+		clipboardBtn.classList.add('upload-zone__button--loading');
+		clipboardBtn.textContent = '⏳ Чтение...';
+
+		try {
+			const reader = new ClipboardReader();
+			const rawText = await reader.read();
+			const result = await DataLoader.load(rawText, 'clipboard');
+
+			statusBanner.setStatus(
+				'✅ Данные успешно загружены из буфера обмена',
+				'success',
+			);
+			clipboardBtn.style.display = 'none';
+
+			// Тот же пайплайн обработки, что и для файла
+			onDataLoaded(result.raw);
+		} catch (err) {
+			Logger.error('ClipboardReader', err.message);
+			statusBanner.setStatus(`❌ ${err.message}`, 'error');
+			clipboardBtn.disabled = false;
+			clipboardBtn.classList.remove('upload-zone__button--loading');
+			clipboardBtn.textContent = '📋 Загрузить из буфера обмена';
+		}
 	});
 
 	// Очистка логов
