@@ -2,7 +2,7 @@
  * @fileoverview
  * Точка входа приложения Trace Viz.
  * Реализует полный пайплайн:
- *   1. FileReader → onDataLoaded(rawData)
+ *   1. FileLoader → onDataLoaded(rawData)
  *   2. OpenSourceExtractor.extract(rawData) → sources[]
  *   3. new DataNormalizer(fieldMapping).normalize(sources) → NormalizedRecord[]
  *   4. TraceGrouper.group(records) → { traces, uncategorized }
@@ -23,7 +23,7 @@
 'use strict';
 
 import { Logger } from './utils/Logger.js';
-import { FileLoader } from './io/FileReader.js';
+import { FileLoader } from './io/FileLoader.js';
 import { OpenSourceExtractor } from './parser/OpenSourceExtractor.js';
 import { DataNormalizer } from './parser/DataNormalizer.js';
 import { TraceGrouper } from './processor/TraceGrouper.js';
@@ -72,7 +72,7 @@ const APP_STATE = {
 /**
  * Этап парсинга: извлекает источники из структуры данных и нормализует их.
  *
- * @param {Object} data - сырые данные из FileReader
+ * @param {Object} data - сырые данные из FileLoader
  * @returns {Object} распарсенные данные с полями sources (нормализованные записи) и raw (исходные)
  */
 function parseData(data) {

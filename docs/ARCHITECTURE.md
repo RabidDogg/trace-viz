@@ -11,10 +11,10 @@ TraceViz — одностраничное приложение (SPA) для ви
 Load → Parse → Normalize → Group → Classify → Build Hierarchy → Layout → Render
 ```
 
-### 1. Load (`src/io/FileReader.js`)
+### 1. Load (`src/io/FileLoader.js`)
 
 - Drag&Drop или file input
-- FileReader API (readAsText)
+- FileLoader API (readAsText)
 - Валидация JSON
 - Обёртка плоского массива в Elasticsearch-структуру
 
@@ -64,7 +64,7 @@ Load → Parse → Normalize → Group → Classify → Build Hierarchy → Layo
 ```
 src/
 ├── config/          # Конфигурация (field-mapping, app)
-├── io/              # Ввод/вывод (FileReader)
+├── io/              # Ввод/вывод (FileLoader)
 ├── parser/          # Парсинг и нормализация
 ├── processor/       # Обработка и классификация
 ├── renderer/        # SVG-рендеринг
