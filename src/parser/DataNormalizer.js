@@ -9,6 +9,7 @@
 
 import { FIELD_MAPPING, RAW_FIELDS } from '../config/field-mapping.js';
 import { ElapsedParser } from './ElapsedParser.js';
+import { Logger } from '../utils/Logger.js';
 
 /**
  * @typedef {Object} NormalizedRecord
@@ -19,6 +20,7 @@ import { ElapsedParser } from './ElapsedParser.js';
  * @property {number|null} timestampMs - timestamp в миллисекундах (Date.parse)
  * @property {string|null} stageName - обрезан до 200 символов
  * @property {boolean} isError
+ * @property {string|null} logLevel
  * @property {Object} raw - исходный объект для сохранения полной информации
  */
 
@@ -74,7 +76,10 @@ class DataNormalizer {
 		}
 
 		return sources.map(function (source) {
-			return this.#normalizeRecord(source);
+			const norm = this.#normalizeRecord(source);
+			Logger.debug('DataNormalizer', 'Source data: ', source);
+			Logger.debug('DataNormalizer', 'Normalized data: ', norm);
+			return norm;
 		}, this);
 	}
 
@@ -95,6 +100,7 @@ class DataNormalizer {
 				timestampMs: null,
 				stageName: null,
 				isError: false,
+				logLevel: null,
 				raw: source || {},
 			};
 		}
@@ -145,7 +151,13 @@ class DataNormalizer {
 		// 7. ErrorFlag
 		const isError = this.#checkIsError(source);
 
-		// 8. Raw — сохраняем только указанные поля
+		// 8. LogLevel
+		const logLevel = this.#getFirstValue(
+			source,
+			this._fieldMapping.logLevel,
+		);
+
+		// 9. Raw — сохраняем только указанные поля
 		/** @type {Object} */
 		const raw = {};
 		for (let i = 0; i < RAW_FIELDS.length; i++) {
@@ -178,6 +190,7 @@ class DataNormalizer {
 			timestampMs: timestampMs,
 			stageName: stageName,
 			isError: isError,
+			logLevel: logLevel,
 			raw: raw,
 		};
 	}

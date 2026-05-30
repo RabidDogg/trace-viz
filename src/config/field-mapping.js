@@ -32,6 +32,7 @@ export const FIELD_MAPPING = Object.freeze({
 		'Message',
 	],
 	errorFlag: ['LogLevel', 'Exception'],
+	logLevel: ['LogLevel'],
 });
 
 /**
