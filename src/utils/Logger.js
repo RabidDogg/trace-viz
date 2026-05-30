@@ -119,19 +119,19 @@ class Logger {
 
 		switch (level) {
 			case LOG_LEVELS.DEBUG:
-				console.debug(prefix, message, ...args);
+				console.debug('%s %s %o', prefix, message, ...args);
 				break;
 			case LOG_LEVELS.INFO:
 				console.info('%s %s %o', prefix, message, ...args);
 				break;
 			case LOG_LEVELS.WARN:
-				console.warn(prefix, message, ...args);
+				console.warn('%s %s %o', prefix, message, ...args);
 				break;
 			case LOG_LEVELS.ERROR:
-				console.error(prefix, message, ...args);
+				console.error('%s %s %o', prefix, message, ...args);
 				break;
 			default:
-				console.log(prefix, message, ...args);
+				console.log('%s %s %o', prefix, message, ...args);
 		}
 
 		Logger.#dispatchToUI(level, moduleName, message);
