@@ -40,6 +40,7 @@ import { RawLogViewer } from './ui/RawLogViewer.js';
 import { TraceListView } from './ui/TraceList.js';
 import { DetailPanel } from './ui/DetailPanel.js';
 import { StatusBanner } from './ui/StatusBanner.js';
+import { DebugToggle } from './ui/DebugToggle.js';
 import { FIELD_MAPPING } from './config/field-mapping.js';
 import { APP_DEBUG, LAYOUT_CONFIG } from './config/app.js';
 
@@ -559,6 +560,9 @@ function onError(message) {
 function initApp() {
 	Logger.info('Main', 'Trace Viz инициализация...');
 
+	// Инициализация переключателя режима отладки
+	new DebugToggle();
+
 	const dropZone = document.getElementById('upload-zone');
 	const fileInput = document.getElementById('file-input');
 	const statusEl = document.getElementById('upload-status');
@@ -572,6 +576,9 @@ function initApp() {
 		);
 		return;
 	}
+
+	// Регистрация элемента статуса в DataLoader
+	DataLoader.setStatusElement(statusEl);
 
 	// Инициализация глобальных обработчиков ошибок
 	Logger.initGlobalHandlers();
@@ -597,7 +604,7 @@ function initApp() {
 	APP_STATE.detailPanel = detailPanel;
 
 	// Инициализация FileLoader
-	const fileLoader = new FileLoader(dropZone, fileInput, statusEl, {
+	const fileLoader = new FileLoader(dropZone, fileInput, {
 		onDataLoaded: onDataLoaded,
 		onError: onError,
 	});

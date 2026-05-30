@@ -9,7 +9,7 @@
 
 'use strict';
 
-import { APP_DEBUG } from '../config/app.js';
+import { getDebugEnabled } from '../config/app.js';
 
 /** @enum {string} */
 const LOG_LEVELS = Object.freeze({
@@ -51,13 +51,13 @@ class Logger {
 
 	/**
 	 * Выводит сообщение уровня DEBUG.
-	 * Отображается только если APP_DEBUG === true.
+	 * Отображается только если getDebugEnabled() === true.
 	 * @param {string} moduleName - Имя модуля-источника лога
 	 * @param {string} message
 	 * @param {...*} args
 	 */
 	static debug(moduleName, message, ...args) {
-		if (!APP_DEBUG) return;
+		if (!getDebugEnabled()) return;
 		Logger.#write(LOG_LEVELS.DEBUG, moduleName, message, ...args);
 	}
 
@@ -139,12 +139,15 @@ class Logger {
 
 	/**
 	 * Отправляет лог в UI-контейнер (если он существует).
+	 * Отображает в DOM только если режим отладки включён.
 	 * @param {string} level
 	 * @param {string} moduleName
 	 * @param {string} message
 	 * @private
 	 */
 	static #dispatchToUI(level, moduleName, message) {
+		if (!getDebugEnabled()) return;
+
 		const container = document.getElementById('log-container');
 		if (!container) return;
 

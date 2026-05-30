@@ -7,10 +7,34 @@
 
 'use strict';
 
+/** @type {boolean} */
+let _debugEnabled = false;
+
 /**
- * Глобальный флаг отладки.
- * При true включаются DEBUG-логи и расширенные проверки типов.
- * В релизе — false.
+ * Возвращает текущее состояние режима отладки.
+ * @returns {boolean}
+ */
+export function getDebugEnabled() {
+	return _debugEnabled;
+}
+
+/**
+ * Устанавливает состояние режима отладки.
+ * Диспатчит событие `debug:changed` на window.
+ * @param {boolean} value
+ */
+export function setDebugEnabled(value) {
+	_debugEnabled = Boolean(value);
+	window.dispatchEvent(
+		new CustomEvent('debug:changed', {
+			detail: { enabled: _debugEnabled },
+		}),
+	);
+}
+
+/**
+ * Глобальный флаг отладки (константа для обратной совместимости).
+ * Для динамической проверки используйте getDebugEnabled().
  * @type {boolean}
  */
 export const APP_DEBUG = false;
