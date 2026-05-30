@@ -1,6 +1,6 @@
 {
 	"name": "trace-viz",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "Визуализатор distributed trace-логов. Загрузка через файл или буфер обмена → парсинг → нормализация → иерархия → рендеринг. OpenTelemetry / Elasticsearch / OpenSearch форматы",
 	"private": true,
 	"scripts": {
