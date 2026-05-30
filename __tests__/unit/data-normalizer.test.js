@@ -161,6 +161,7 @@ export function testUsesCustomFieldMapping() {
 		timestamp: ['MyTimestamp'],
 		stageName: ['MyStage'],
 		errorFlag: ['MyLevel'],
+		logLevel: ['MyLogLevel'],
 	};
 
 	const normalizer = new DataNormalizer(customMapping);
