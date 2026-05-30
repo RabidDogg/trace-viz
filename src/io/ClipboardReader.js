@@ -69,6 +69,7 @@ export class ClipboardReader {
 		}
 
 		if (!text || text.trim().length === 0) {
+			Logger.error('ClipboardReader', 'Clipboard is empty.');
 			throw new Error('Буфер обмена пуст');
 		}
 
@@ -81,6 +82,10 @@ export class ClipboardReader {
 		}
 
 		if (!ClipboardReader.validateStructure(parsed)) {
+			Logger.error(
+				'ClipboardReader',
+				'Data structure does not match OpenSearch JSON format.',
+			);
 			throw new Error('Формат данных не соответствует OpenSearch JSON');
 		}
 
