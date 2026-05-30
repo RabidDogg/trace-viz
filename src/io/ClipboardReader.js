@@ -21,6 +21,7 @@
  */
 
 import { Logger } from '../utils/Logger.js';
+import { DataLoader } from './DataLoader.js';
 
 /**
  * @class ClipboardReader
@@ -54,12 +55,17 @@ export class ClipboardReader {
 			throw new Error('Clipboard API не поддерживается');
 		}
 
+		DataLoader.setStatus('Чтение из буфера обмена...');
 		Logger.info('ClipboardReader', 'Start reading from clipboard.');
 
 		let text;
 		try {
 			text = await navigator.clipboard.readText();
 		} catch (err) {
+			DataLoader.setStatus(
+				'Ошибка: доступ к буферу обмена запрещён',
+				'error',
+			);
 			Logger.error(
 				'ClipboardReader',
 				'Access denied or API not supported.',
@@ -68,10 +74,12 @@ export class ClipboardReader {
 		}
 
 		if (!text || text.trim().length === 0) {
+			DataLoader.setStatus('Ошибка: буфер обмена пуст', 'error');
 			Logger.error('ClipboardReader', 'Clipboard is empty.');
 			throw new Error('Буфер обмена пуст');
 		}
 
+		DataLoader.setStatus('Данные из буфера обмена получены');
 		return text;
 	}
 

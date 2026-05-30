@@ -11,6 +11,7 @@
 'use strict';
 
 import { Logger } from '../utils/Logger.js';
+import { DataLoader } from './DataLoader.js';
 
 /**
  * @typedef {Object} FileLoaderCallbacks
@@ -29,9 +30,6 @@ class FileLoader {
 	/** @type {HTMLInputElement} */
 	#fileInput;
 
-	/** @type {HTMLElement} */
-	#statusEl;
-
 	/** @type {FileLoaderCallbacks} */
 	#callbacks;
 
@@ -44,13 +42,11 @@ class FileLoader {
 	/**
 	 * @param {HTMLElement} dropZone - DOM-элемент зоны Drag & Drop
 	 * @param {HTMLInputElement} fileInput - DOM-элемент <input type="file">
-	 * @param {HTMLElement} statusEl - Элемент для отображения статуса
 	 * @param {FileLoaderCallbacks} callbacks - Колбэки onDataLoaded и onError
 	 */
-	constructor(dropZone, fileInput, statusEl, callbacks) {
+	constructor(dropZone, fileInput, callbacks) {
 		this.#dropZone = dropZone;
 		this.#fileInput = fileInput;
-		this.#statusEl = statusEl;
 		this.#callbacks = callbacks;
 
 		this.#bindEvents();
@@ -93,7 +89,6 @@ class FileLoader {
 
 		this.#dropZone = null;
 		this.#fileInput = null;
-		this.#statusEl = null;
 		this.#callbacks = null;
 		this.#isDestroyed = true;
 
@@ -187,7 +182,7 @@ class FileLoader {
 			`Загрузка файла: ${file.name} (${Logger.time('readFile', () => file.size)} байт)`,
 		);
 
-		this.#setStatus('Чтение файла...');
+		DataLoader.setStatus('Чтение файла...');
 
 		// Используем window.FileReader (браузерный API), а не наш класс FileLoader
 		const reader = new window.FileReader();
@@ -196,7 +191,7 @@ class FileLoader {
 			try {
 				const rawText = /** @type {string} */ (reader.result);
 				const data = this.#parseAndValidate(rawText, file.name);
-				this.#setStatus(
+				DataLoader.setStatus(
 					`Файл "${file.name}" загружен успешно`,
 					'success',
 				);
@@ -293,23 +288,7 @@ class FileLoader {
 	 */
 	#showError(message) {
 		Logger.error('FileLoader', message);
-		this.#setStatus(message, 'error');
 		this.#showModal(message);
-	}
-
-	/**
-	 * Устанавливает текст статуса.
-	 * @param {string} text
-	 * @param {string} [type]
-	 * @private
-	 */
-	#setStatus(text, type) {
-		if (!this.#statusEl) return;
-		this.#statusEl.textContent = text;
-		this.#statusEl.className = 'upload-zone__status';
-		if (type) {
-			this.#statusEl.classList.add(`upload-zone__status--${type}`);
-		}
 	}
 
 	/**
@@ -354,7 +333,7 @@ class FileLoader {
 	 * @private
 	 */
 	#recover() {
-		this.#setStatus('');
+		DataLoader.setStatus('');
 		this.#fileInput.value = '';
 		Logger.info(
 			'FileLoader',

@@ -31,6 +31,41 @@ import { Logger } from '../utils/Logger.js';
  * // → { records: [...], raw: {...} }
  */
 export class DataLoader {
+	/** @type {HTMLElement|null} */
+	static #statusEl = null;
+
+	/**
+	 * Регистрирует DOM-элемент для отображения статуса загрузки.
+	 * @param {HTMLElement} element - Элемент #upload-status
+	 */
+	static setStatusElement(element) {
+		DataLoader.#statusEl = element;
+	}
+
+	/**
+	 * Устанавливает текст и CSS-класс статуса.
+	 * @param {string} text - Текст статуса
+	 * @param {string} [type] - Тип статуса (success/error/info)
+	 * @private
+	 */
+	static #setStatus(text, type) {
+		if (!DataLoader.#statusEl) return;
+		DataLoader.#statusEl.textContent = text;
+		DataLoader.#statusEl.className = 'upload-zone__status';
+		if (type) {
+			DataLoader.#statusEl.classList.add(`upload-zone__status--${type}`);
+		}
+	}
+
+	/**
+	 * Публичный доступ к setStatus для внешних вызовов (FileLoader, ClipboardReader).
+	 * @param {string} text - Текст статуса
+	 * @param {string} [type] - Тип статуса (success/error/info)
+	 */
+	static setStatus(text, type) {
+		DataLoader.#setStatus(text, type);
+	}
+
 	/**
 	 * Загружает и парсит JSON-строку.
 	 *
@@ -43,10 +78,15 @@ export class DataLoader {
 		Logger.info('DataLoader', `Loading data from source: ${source}`);
 
 		// Парсинг JSON
+		DataLoader.#setStatus('Парсинг JSON...');
 		let parsed;
 		try {
 			parsed = JSON.parse(rawText);
 		} catch (e) {
+			DataLoader.#setStatus(
+				`Ошибка: невалидный JSON — ${e.message}`,
+				'error',
+			);
 			Logger.error(
 				'DataLoader',
 				`Failed to parse JSON from ${source}: ${e.message}`,
@@ -55,7 +95,12 @@ export class DataLoader {
 		}
 
 		// Валидация структуры данных
+		DataLoader.#setStatus('Валидация структуры...');
 		if (!ClipboardReader.validateStructure(parsed)) {
+			DataLoader.#setStatus(
+				'Ошибка: формат данных не соответствует OpenSearch JSON',
+				'error',
+			);
 			Logger.error(
 				'DataLoader',
 				`Data structure from ${source} does not match OpenSearch JSON format.`,
@@ -64,7 +109,13 @@ export class DataLoader {
 		}
 
 		// Извлечение записей через OpenSourceExtractor
+		DataLoader.#setStatus('Извлечение записей...');
 		const records = OpenSourceExtractor.extract(parsed);
+
+		DataLoader.#setStatus(
+			`Загрузка завершена (${records.length} записей)`,
+			'success',
+		);
 
 		Logger.info(
 			'DataLoader',
